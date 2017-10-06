@@ -1,0 +1,37 @@
+with open('C:/Users/user/Downloads/Personal Stuff/Education/Monash University/Python/Assignment (updated 30 Aug 2017)-20170929/G.txt', 'r') as fileG, open('C:/Users/user/Downloads/Personal Stuff/Education/Monash University/Python/Assignment (updated 30 Aug 2017)-20170929/H.txt', 'r') as fileH:
+    resultsG = {}
+    columnsG = {}
+    for i, x in enumerate(fileG):
+	    resultsG[i] = str(x)
+	    #print results[i]
+    size = len(resultsG)
+    for i in resultsG:
+	    if i==0:
+		    words = resultsG[i].strip('\n').split(":")
+		    print len(words)
+	    else:
+		    contentwords = resultsG[i].strip('\n').split(" ")
+		    for m in range(0,len(contentwords)):
+			    if contentwords[m]  != "0":
+				    columnsG[len(columnsG)] = [words[i-1],words[m],contentwords[m]]
+    for n in range(0, len(columnsG)):
+	    print columnsG[n]
+
+    resultsH = {}
+    columnsH = {}
+    for i, x in enumerate(fileH):
+	    resultsH[i] = str(x)
+	    #print results[i]
+    size = len(resultsH)
+    for i in resultsH:
+	    if i==0:
+		    words = resultsH[i].strip('\n').split(":")
+		    print len(words)
+	    else:
+		    contentwords = resultsH[i].strip('\n').split(" ")
+		    for m in range(0,len(contentwords)):
+			    if contentwords[m]  != "0":
+				    columnsH[len(columnsH)] = [words[i-1],words[m],contentwords[m]]
+    for n in range(0, len(columnsH)):
+	    print columnsH[n]
+		
