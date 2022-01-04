@@ -1,0 +1,1903 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Dec 31 11:16:04 2021
+
+@author: S2354A
+"""
+
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Aug 28 12:20:42 2021
+
+@author: S2354A
+"""
+
+from pandas_datareader import data
+import matplotlib.pyplot as plt
+import pandas as pd
+from datetime import date
+import numpy as np
+from datetime import datetime, timedelta
+
+
+fileList =[]
+dailySellList = []
+dailyBuyList = []
+buyListImages = []
+sellListImages = []
+today = date.today()
+# Define the instruments to download. We would like to see Apple, Microsoft and the S&P500 index.
+tickers = ['AAPL', 'MSFT', 'PLTR']
+
+# We would like all available data from 01/01/2000 until 12/31/2016.
+start_date = '2020-01-01'
+end_date = today
+
+Ticker = '7233.KL'
+df = data.DataReader('AAPL', 'yahoo', start_date, end_date)
+df_ori = data.DataReader('AAPL', 'yahoo', start_date, end_date)
+
+
+# User pandas_reader.data.DataReader to load the desired data. As simple as that.
+def populateDF(stockCode):
+    df = data.DataReader(stockCode, 'yahoo', start_date, end_date)
+    df_ori = data.DataReader(stockCode, 'yahoo', start_date, end_date)
+    return (df, df_ori)
+
+
+
+##On Balance Volume
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
+##On Balance Volume
+
+#Calculate the On Balance Volume (OBV)
+
+def populateOBV(df):
+    OBV = []
+    OBV.append(0)
+    
+    #Loop through the data set (close price) from the second row (index 1) to the end of the data set
+    for i in range(1, len(df.Close)):
+      if df.Close[i] > df.Close[i-1] :
+        OBV.append(OBV[-1] + df.Volume[i])
+      elif df.Close[i] < df.Close[i-1]:
+        OBV.append(OBV[-1] - df.Volume[i])
+      else:
+        OBV.append(OBV[-1])
+    
+    df['OBV'] = OBV
+
+def populateIndicators(df):
+    #Store the OBV and OBV (Exponential Moving Average) EMA into new columns
+    RollingPeriod_Fibonacci = 25
+    df['OBV_EMA'] = df['OBV'].ewm(span=20).mean()
+    df['EMA50'] = df['Close'].ewm(span=50).mean()
+    df['EMA200'] = df['Close'].ewm(span=200).mean()
+    df['EMA250'] = df['Close'].ewm(span=250).mean()
+    df['volume50'] = df['Volume'].ewm(span=50).mean()
+    df['diffVolPercentFromEMA'] = (df['Volume'] - df['volume50']) * 100 / df['volume50']
+    # rng = pd.date_range(end=today, periods=RollingPeriod_Fibonacci, freq='D')
+    df['maxPrice'] = df['Close'].rolling(RollingPeriod_Fibonacci).max().fillna(df['Close'])
+    df['minPrice'] = df['Close'].rolling(RollingPeriod_Fibonacci).min().fillna(df['Close'])
+    df['difference'] = df['maxPrice'] - df['minPrice']
+    # df['first_level'] = df['maxPrice'] -  df['difference'] * 0.12
+    # df['diffPercent'] = ( df['Close'] - df['first_level'] ) * 100 / df['minPrice']
+    df['diffPercent'] = (df['Close'] - df['maxPrice'] ) *100 / df['minPrice']
+    df['volume50'] = df['Volume'].ewm(span=50).mean()
+    df['diffVolPercentFromEMA'] = (df['Volume'] - df['volume50']) * 100 / df['volume50']
+    df['diffVol%FromEMA'] = (df['Volume'] - df['volume50']) * 100 / df['volume50']
+    # df.groupby(df.data.lt(0))
+    
+# #Create and plot the graph
+# plt.figure(figsize=(15.2,4.5))
+# plt.plot(df['OBV'], label = 'OBV', color = 'orange')
+# plt.plot(df['OBV_EMA'], label = 'OBV_EMA', color = 'purple')
+# plt.title('OBV / OBV_EMA Chart')
+# plt.xlabel('date', fontsize = 18)
+# plt.ylabel('Price USD', fontsize = 18)
+# plt.show()
+
+
+def OBV_Strategy(signal, col1, col2, aboveVolEMAProportion,belowPerc):
+  sigPriceBuy = []
+  sigPriceSell = []
+  flag = -1
+  #Loop through the length of the data set
+  for i in range(0, len(signal)):
+    #If OBV > OBV_EMA Then Buy--> col1 --> 'OBV' and col2 => 'OBV_EMA'
+    if (signal[col1][i] > signal[col2][i]) and (signal['Close'][i] > signal['EMA50'][i]) and (signal['EMA50'][i] > signal['EMA200'][i]) and flag !=1:
+    #if (signal['Close'][i] > signal['EMA50'][i]) and (signal['EMA50'][i] > signal['EMA200'][i]) and (df['diffVolPercentFromEMA'][i] > aboveVolEMAProportion ) and flag !=1:
+      sigPriceBuy.append(signal['Close'][i])
+      sigPriceSell.append(np.nan)
+      flag = 1
+    #If OBV < OBV_EMA Then Sell
+    elif (signal[col1][i] < signal[col2][i]) and flag !=0:
+    # elif (signal[col1][i] < signal[col2][i] or ticker_history['diffFromHigh25'][i] < -6)and flag !=0:
+    # elif df['diffPercent'][i] < belowPerc and flag !=0:
+    # elif signal[col1][i] < signal[col2][i] and flag !=0:
+      sigPriceSell.append(signal['Close'][i])
+      sigPriceBuy.append(np.nan)
+      flag = 0
+    else:
+      sigPriceSell.append(np.nan)
+      sigPriceBuy.append(np.nan)
+  return (sigPriceBuy, sigPriceSell)
+
+
+# #Create buy and sell columns
+def populateOBVBuySellSignal(df):
+    strategyOBV = OBV_Strategy(df, 'OBV', 'OBV_EMA', 0.1, -10)
+    df['Buy_Signal_Price'] = strategyOBV[0]
+    df['Sell_Signal_Price'] = strategyOBV[1]
+    # # # #Show the data set
+    # df.tail(5)
+
+
+# df.to_excel('output1.xlsx', engine='xlsxwriter')
+
+#Plot the buy and sell prices
+def plotOBVCharts(df, stockCode, stockName,noOfDaysToPlot, BuyOrSell, closePrice):
+    date_N_days_ago = datetime.now() - timedelta(days=noOfDaysToPlot)
+    df.reset_index(inplace=True)
+    df = df[(df['Date'] > date_N_days_ago)]
+    df.set_index('Date',inplace=True)
+    plt.figure(figsize=(15.2,4.5))
+    plt.plot(df['Close'], label='close', alpha =0.35)
+    plt.plot(df['EMA50'], label='EMA50', alpha =0.35)
+    plt.plot(df['EMA200'], label='EMA200', alpha =0.35)
+    # plt.plot(ticker_history['OBV'], label = 'OBV', color = 'orange')
+    # plt.plot(ticker_history['OBV_EMA'], label = 'OBV_EMA', color = 'purple')
+    plt.scatter(df.index, df['Buy_Signal_Price'], label = 'Buy Signal', marker = '^' , alpha=1, color = 'green')
+    plt.scatter(df.index, df['Sell_Signal_Price'], label = 'Sell Signal', marker = '*', alpha =1 , color= 'red')
+    # plt.title('OBV Strategy '+ stockName)
+    plt.title(BuyOrSell + '_' + stockCode + '_' + stockName)
+    plt.xlabel('date', fontsize = 18)
+    plt.ylabel('Price', fontsize = 18)
+    # plt.legend(loc='upper left')
+    df.reset_index(inplace=True)
+    df['DateStr'] = df['Date'].dt.strftime("%Y_%m_%d")
+    # print(df.tail(1)['DateStr'].any())
+    fileName = df.tail(1)['DateStr'].any() + '_' + BuyOrSell + '_' + stockCode + '_' +stockName
+    fileName = fileName.replace('.','_')
+    print(fileName)
+    plt.savefig(fileName)
+    if BuyOrSell == 'Buy':
+        dailyBuyList.append([fileName+'.png',stockCode, stockName, "{:.2f}".format(closePrice)])
+    elif BuyOrSell == 'Sell':
+        dailySellList.append([fileName+'.png',stockCode, stockName, "{:.2f}".format(closePrice)])
+    fileList.append((fileName+'.png'))
+    plt.show()
+
+
+# ##Simple Moving Average
+# #########################################################################################################
+# #########################################################################################################
+# #########################################################################################################
+# #########################################################################################################
+# #########################################################################################################
+# #########################################################################################################
+# #########################################################################################################
+# ##Simple Moving Average
+
+
+
+#Create a function to calculate the Simple Moving Average (SMA)
+def SMA(data, period , column='Close'):
+    return data[column].rolling(window=period).mean()
+    #Create two new columns to store the 20 day and 50 day SMA
+
+def populateSMAIndicators(df):
+  
+    df['Fast_MA']=SMA(df,20)
+    df['Slow_MA']=SMA(df,50)
+    # df['diffPercent'] = (df['Close'] - df['maxPrice'] ) *100 / df['minPrice']
+    df['volume50'] = df['Volume'].ewm(span=50).mean()
+    df['diffVolPercentFromEMA'] = (df['Volume'] - df['volume50']) * 100 / df['volume50']
+    df['diffVol%FromEMA'] = (df['Volume'] - df['volume50']) * 100 / df['volume50']
+    df['SMA_50']=SMA(df, 50)
+    df['SMA_100']=SMA(df, 100)
+    df['SMA_250']=SMA(df, 200)
+    df['EMA50'] = df['Close'].ewm(span=50).mean()
+    df['EMA100'] = df['Close'].ewm(span=100).mean()
+    df['EMA200'] = df['Close'].ewm(span=200).mean()
+    df['EMA250'] = df['Close'].ewm(span=250).mean()
+    df['isUptrend'] = (df['EMA50'] >  df['EMA250']) & (df['EMA100'] >  df['EMA250']) & (df['EMA50'] >  df['EMA100'])
+    delta = 30
+    df.reset_index(inplace=True)
+    df['count_in_last_N_days'] = df.assign(count=1).groupby(
+    ['Original_StockCode']).apply(lambda x: x.rolling('%sD' %delta, on='Date').sum(
+        ))['isUptrend'].astype(int) - 1
+    df['diffValue'] = df['Close'] - df['Close'].shift(1) 
+    df['diffPercent'] = (df['Close'] - df['Close'].shift(1))/df['Close'].shift(1)
+    df['accDiffPercent'] = df.groupby(df['diffPercent'].lt(0).astype(float).diff().ne(0).cumsum()).diffPercent.cumsum()
+    print(df.tail())
+    print(df.columns)
+    # ['count_in_last_%s_days' %(delta)]
+    df.set_index('Date',inplace=True)
+    
+    
+    #Get the buy and sell signals
+ 
+    # print(((df['Fast_MA'] > df['Slow_MA']) and (df['Price'] > df['Fast_MA'])))
+    # print('saagdfgasdfgadfgadga')
+    # df['Signal'] = np.where(((df['Fast_MA'] > df['Slow_MA']).any() and (df['Close'] > df['Fast_MA']).any()),1,0)
+  
+    # df['Position'] = df['Signal'].diff()
+    # df['Buy_Signal_Price'] = np.where(df['Position']== 1, df['Close'], np.NAN)
+    # df['Sell_Signal_Price'] = np.where(df['Position']== -1, df['Close'], np.NAN)
+
+def SMA_Mid_Strategy(signal, col1, col2):
+  sigPriceBuy = []
+  sigPriceSell = []
+  flag = -1
+  previousFlag = 'Downtrend'
+  print(df)
+  #Loop through the length of the data set
+  for i in range(0, len(signal)):
+    #If OBV > OBV_EMA Then Buy--> col1 --> 'OBV' and col2 => 'OBV_EMA'
+    # if (signal[col1][i] > signal[col2][i]) and (signal['Close'][i] > signal[col1][i])  and (signal['diffVol%FromEMA'][i] > 0) and flag !=1:   
+    if((signal['count_in_last_N_days'][i])>18  and flag !=1):
+    #if (signal['Close'][i] > signal['EMA50'][i]) and (signal['EMA50'][i] > signal['EMA200'][i]) and (df['diffVolPercentFromEMA'][i] > aboveVolEMAProportion ) and flag !=1:
+      sigPriceBuy.append(signal['Close'][i])
+      sigPriceSell.append(np.nan)
+      flag = 1
+      df['Trend'] = 'Uptrend'
+      previousFlag = 'Uptrend'
+    #If OBV < OBV_EMA Then Sell
+    # elif ((signal[col1][i] < signal[col2][i]) or (signal['Close'][i] < signal[col1][i]))  and  flag !=0:
+    elif((signal['count_in_last_N_days'][i])<=18  and flag !=0):
+    # elif (signal[col1][i] < signal[col2][i] or ticker_history['diffFromHigh25'][i] < -6)and flag !=0:
+    # elif df['diffPercent'][i] < belowPerc and flag !=0:
+    # elif signal[col1][i] < signal[col2][i] and flag !=0:
+      sigPriceSell.append(signal['Close'][i])
+      sigPriceBuy.append(np.nan)
+      flag = 0
+      df['Trend'] = 'Downtrend'
+      previousFlag = 'Downtrend'
+    else:
+      sigPriceSell.append(np.nan)
+      sigPriceBuy.append(np.nan)
+      df['Trend'] = previousFlag
+  return (sigPriceBuy, sigPriceSell)
+
+
+# #Create buy and sell columns
+def populate_SMA_Mid_BuySellSignal(df):
+    print('xxxxxx')
+    strategySMA = SMA_Mid_Strategy(df, 'Fast_MA', 'Slow_MA')
+    print('yyyyy')
+    df['Buy_Signal_Price'] = strategySMA[0]
+    df['Sell_Signal_Price'] = strategySMA[1]
+    # # # #Show the data set
+    # df.tail(5)
+
+#Plot the buy and sell prices
+def plotSMA_ST_Charts(df, stockCode, stockName,noOfDaysToPlot, BuyOrSell, closePrice):
+    date_N_days_ago = datetime.now() - timedelta(days=noOfDaysToPlot)
+    df.reset_index(inplace=True)
+    df = df[(df['Date'] > date_N_days_ago)]
+    df.set_index('Date',inplace=True)
+    plt.figure(figsize=(15.2,4.5))
+    plt.plot(df['Close'], label='close', alpha =0.35)
+    plt.plot(df['EMA50'], label='Fast_MA', alpha =0.35)
+    plt.plot(df['EMA100'], label='Medium_MA', alpha =0.35)
+    plt.plot(df['EMA250'], label='Slow_MA', alpha =0.35)
+    # plt.plot(ticker_history['OBV'], label = 'OBV', color = 'orange')
+    # plt.plot(ticker_history['OBV_EMA'], label = 'OBV_EMA', color = 'purple')
+    plt.scatter(df.index, df['Buy_Signal_Price'], label = 'Buy Signal', marker = '^' , alpha=1, color = 'green')
+    plt.scatter(df.index, df['Sell_Signal_Price'], label = 'Sell Signal', marker = '*', alpha =1 , color= 'red')
+    # plt.title('OBV Strategy '+ stockName)
+    plt.title(BuyOrSell + '_' + stockCode + '_' + stockName)
+    plt.xlabel('date', fontsize = 18)
+    plt.ylabel('Price', fontsize = 18)
+    # plt.legend(loc='upper left')
+    df.reset_index(inplace=True)
+    df['DateStr'] = df['Date'].dt.strftime("%Y_%m_%d")
+    # print(df.tail(1)['DateStr'].any())
+    fileName = df.tail(1)['DateStr'].any() + '_' + BuyOrSell + '_' + stockCode + '_' +stockName
+    fileName = fileName.replace('.','_')
+    print(fileName)
+    plt.savefig(fileName)
+    if BuyOrSell == 'Buy':
+        dailyBuyList.append([fileName+'.png',stockCode, stockName, "{:.2f}".format(closePrice)])
+    elif BuyOrSell == 'Sell':
+        dailySellList.append([fileName+'.png',stockCode, stockName, "{:.2f}".format(closePrice)])
+    fileList.append((fileName+'.png'))
+    plt.show()
+
+
+# ##Moving Average Convergence Divergence
+# #########################################################################################################
+# #########################################################################################################
+# #########################################################################################################
+# #########################################################################################################
+# #########################################################################################################
+# #########################################################################################################
+# #########################################################################################################
+# ##Moving Average Convergence Divergence
+
+def populateMACDIndicators(df):
+    #Calculate the MACD line and the Signal line indicators
+    #Calculate the Short Term Exponential Moving Average
+    ShortEMA = df.Close.ewm(span=12, adjust = False).mean()
+    #Calculate the Long Term Exponential Moving Average
+    LongEMA = df.Close.ewm(span=26, adjust = False).mean()
+    #Calculate the Moving Average Convergence/Divergence (MACD)
+    MACD = ShortEMA - LongEMA
+    #Calculate the Signal Line
+    signal = MACD.ewm(span=9, adjust=False).mean()
+    df['MACD'] = MACD
+    df['Signal Line'] = signal
+
+
+#Create a function to signal when to buy and sell an asset
+def MACD_Strategy(signal):
+      Buy = []
+      Sell = []
+      flag = -1
+    
+      for i in range(0, len(signal)):
+        if signal['MACD'][i] > signal['Signal Line'][i]:
+                  Sell.append(np.nan)
+                  if flag !=1:
+                    Buy.append(signal['Close'][i])
+                    flag =1
+                  else:
+                    Buy.append(np.nan)
+        elif signal['MACD'][i] < signal['Signal Line'][i]:
+                  Buy.append(np.nan)
+                  if flag !=0:
+                    Sell.append(signal['Close'][i])
+                    flag =0
+                  else:
+                    Sell.append(np.nan)
+        else:
+                  Buy.append(np.nan)
+                  Sell.append(np.nan)
+      return (Buy, Sell)
+  
+def populateMACDBuySellSignal(df):  
+    #Create buy and sell column
+    strategyMACD = MACD_Strategy(df)
+    df['Buy_Signal_Price'] = strategyMACD[0]
+    df['Sell_Signal_Price'] = strategyMACD[1]
+    
+
+def plotMACDCharts(df, stockName, noOfDaysToPlot):
+    #Visually show the stock buy and sell signals
+    date_N_days_ago = datetime.now() - timedelta(days=noOfDaysToPlot)
+    df.reset_index(inplace=True)
+    df = df[(df['Date'] > date_N_days_ago)]
+    df.set_index('Date',inplace=True)
+    plt.figure(figsize=(15.2,4.5))
+    plt.scatter(df.index, df['Buy_Signal_Price'], color='green', label='Buy', marker='^', alpha=1)
+    plt.scatter(df.index, df['Sell_Signal_Price'], color='red', label='Sell', marker='v', alpha=1)
+    plt.plot(df['Close'], label='Close Price', alpha=0.35)
+    plt.plot(df['EMA50'], label='EMA50', alpha =0.35)
+    plt.plot(df['EMA200'], label='EMA200', alpha =0.35)
+    plt.title('MACD Strategy' + stockName)
+    plt.xlabel('Date')
+    plt.ylabel('Close Price USD ($)')
+    plt.legend(loc= 'upper left')
+    plt.show()
+
+
+
+
+
+
+
+
+# ##FIBONACCI RETRACEMENT
+# #########################################################################################################
+# #########################################################################################################
+# #########################################################################################################
+# #########################################################################################################
+# #########################################################################################################
+# #########################################################################################################
+# #########################################################################################################
+
+# #Plot the Fibonacci Levels along with the close price and the MACD and Signal Line
+
+
+# max_price = df['Close'].max()
+# min_price = df['Close'].min()
+
+# difference = max_price - min_price
+# first_level = max_price - difference * 0.236
+# second_level = max_price - difference * 0.382
+# third_level = max_price - difference * 0.5
+# fourth_level = max_price - difference * 0.618
+
+
+# new_df = df
+
+# #plot the Fibonacci Levels
+# plt.figure(figsize=(12.33,9.5))
+# plt.subplot(2,1,1)
+# plt.plot(new_df.index, new_df['Close'])
+# plt.axhline(max_price, linestyle='--',alpha=0.5, color='red')
+# plt.axhline(first_level, linestyle='--',alpha=0.5, color='orange')
+# plt.axhline(second_level, linestyle='--',alpha=0.5, color='yellow')
+# plt.axhline(third_level, linestyle='--',alpha=0.5, color='green')
+# plt.axhline(fourth_level, linestyle='--',alpha=0.5, color='blue')
+# plt.axhline(min_price, linestyle='--',alpha=0.5, color='purple')
+# plt.ylabel('Fibonacci')
+# frame1 = plt.gca()
+# frame1.axes.get_xaxis().set_visible(False)
+# #Plot the MACD Line and the Signal Line
+# plt.subplot(2,1,2)
+# plt.plot(new_df.index, MACD)
+# plt.plot(new_df.index, signal)
+# plt.ylabel('MACD')
+# plt.xticks(rotation=45)
+
+
+# plt.savefig('Fig1.png')
+# #Create new columns for the data frame
+# df['MACD'] = MACD
+# df['Signal Line'] = signal
+
+
+
+# #Create a function to be used in our strategy to get the upper Fibonacci Level and the Lower level of the currenct price
+# def getLevels(price):
+#   if price >= first_level:
+#     return (max_price, first_level)
+#   elif price >= second_level:
+#     return (first_level, second_level)
+#   elif price >= third_level:
+#     return (second_level, third_level)
+#   elif price >= fourth_level:
+#     return (third_level, fourth_level)    
+#   else:
+#     return (fourth_level, min_price)
+
+
+
+# #Create a function for the trading strategy
+
+# #The Strategy
+# #If the signal line crosses above the MACD Line and the current price crossed above or below the last Fibonacci Level then buy
+# #If the signal line crosses below the MACD Line and the current price crossed above or below the last Fibonacci Level then sell
+# #Never sell at a price that's lower than I bought
+
+# def strategy(df):
+#   buy_list = []
+#   sell_list = []
+#   flag = 0
+#   last_buy_price = 0
+
+#   #Loop through the data set
+#   for i in range(0, df.shape[0]):
+#     price = df['Close'][i]
+#     #If this is the first data point within the dataset, then get the level above and below it
+#     if i == 0:
+#       upper_lvl, lower_lvl = getLevels(price)
+#       buy_list.append(np.nan)
+#       sell_list.append(np.nan)
+#     #Else if the current price is greater than or equal to the upper_lvl , or less than or equal to the lower_lvl then we know the price has hit  or crossed a new Fibonacci Level
+#     elif price >= upper_lvl or price <=lower_lvl:
+#       #Check to see the MACD line crossed above or below the signal line
+#       if df['Signal Line'][i] > df['MACD'][i] and flag == 0:
+#         last_buy_price = price
+#         buy_list.append(price)
+#         sell_list.append(np.nan)
+#         #set the flag to 1 to signal that the share was bought
+#         flag = 1
+#       elif df['Signal Line'][i] < df['MACD'][i] and flag == 1 and price >= last_buy_price:
+#         last_buy_price = price
+#         sell_list.append(price)
+#         buy_list.append(np.nan)
+#         #set the flag to 0 to signal that the share was sold
+#         flag = 0
+#       else:
+#         buy_list.append(np.nan)
+#         sell_list.append(np.nan)
+#     else:
+#       buy_list.append(np.nan)
+#       sell_list.append(np.nan)
+
+#     #Update the new levels
+#     upper_lvl, lower_lvl = getLevels(price)
+#   return (buy_list, sell_list)
+
+
+# #Create buy and sell columns
+# buy, sell = strategy(df)
+# df['Buy_Signal_Price'] = buy
+# df['Sell_Signal_Price'] = sell
+
+# new_df = df
+
+# #plot the Fibonacci Levels
+# #plot the Fibonacci Levels
+# plt.figure(figsize=(12.33,9.5))
+# plt.subplot(2,1,1)
+# plt.plot(new_df.index, new_df['Close'] , alpha =0.5)
+# plt.scatter(new_df.index, new_df['Buy_Signal_Price'], color='green', marker='^', alpha =1)
+# plt.scatter(new_df.index, new_df['Sell_Signal_Price'], color='red', marker='v', alpha =1)
+# plt.axhline(max_price, linestyle='--',alpha=0.5, color='red')
+# plt.axhline(first_level, linestyle='--',alpha=0.5, color='orange')
+# plt.axhline(second_level, linestyle='--',alpha=0.5, color='yellow')
+# plt.axhline(third_level, linestyle='--',alpha=0.5, color='green')
+# plt.axhline(fourth_level, linestyle='--',alpha=0.5, color='blue')
+# plt.axhline(min_price, linestyle='--',alpha=0.5, color='purple')
+# plt.title('Fibonacci Retracement ' + Ticker)
+# plt.ylabel('Close Price in USD') 
+# plt.xlabel('Date')
+# plt.xticks(rotation=45)
+# plt.show()
+
+# #
+# from sklearn.tree import DecisionTreeRegressor
+# from sklearn.linear_model import LinearRegression
+# from sklearn.model_selection import train_test_split
+
+# #Create a variable to predict 'x' days out into the future
+# future_days =  25
+
+# #Create a new column(target) shifted 'x' units/days up
+# df['Prediction'] = df[['Close']].shift(-future_days)
+
+# #Create the feature data set (X) and convert it to a numpy array and remove the last 'x' rows/days
+# # featureDataset Subsetting
+# df.reset_index(drop=True, inplace = True)
+# df = df[['Close','Prediction']]
+# print(df)
+# X = np.array(df.drop(['Prediction'],1))[:-future_days]
+# print('print XXXXXX')
+# print(X)
+# print('print yyyyyy')
+# #Create the target data set (y) and convert it to a numpy array and get all of the target values except the last 'x' rows/days
+# y = np.array(df['Prediction'])[:-future_days]
+# print(y)
+
+# # df.to_excel('output2.xlsx', engine = 'xlsxwriter')
+
+# #Split the data into 70% training and 30% testing
+# x_train, x_test, y_train, y_test = train_test_split(X, y, test_size = 0.30, random_state = 2)
+
+# #Create the models
+# #Create the decision tree regressor model
+# tree = DecisionTreeRegressor().fit(x_train, y_train)
+
+# #Create the linear regression model
+# lr = LinearRegression().fit(x_train, y_train)
+
+# #Get the last 25 rows of the feature data set
+# x_future = df.drop(['Prediction'],1)[:-future_days]
+# x_future = x_future.tail(future_days)
+# x_future =  np.array(x_future)
+
+# #Show the model tree prediction
+# tree_prediction = tree.predict(x_future)
+# print(tree_prediction)
+
+# #Show the model linear regression prediction
+# lr_prediction = lr.predict(x_future)
+# print(lr_prediction)
+
+
+# #Visualize the data using Decision Tree
+# predictions = tree_prediction
+
+# valid = df[X.shape[0]:]
+# valid['Predictions'] = predictions
+# plt.figure(figsize=(16,8))
+# plt.title('Decision Tree Prediction Model')
+# plt.xlabel('Days')
+# plt.ylabel('Close Price MYR (RM)')
+# plt.plot(df['Close'])
+# plt.plot(valid[['Close', 'Predictions']])
+# plt.legend(['Orig','Val','Pred'])
+# plt.show()
+
+
+
+# #Visualize the data using Linear Regression
+# predictions = lr_prediction
+
+# valid = df[X.shape[0]:]
+# valid['Predictions'] = predictions
+# plt.figure(figsize=(16,8))
+# plt.title('Linear Regression Prediction Model')
+# plt.xlabel('Days')
+# plt.ylabel('Close Price MYR (RM)')
+# plt.plot(df['Close'])
+# plt.plot(valid[['Close', 'Predictions']])
+# plt.legend(['Orig','Val','Pred'])
+# plt.show()
+
+
+
+# #LSTM
+# ###################################################################################
+# ###################################################################################
+# ###################################################################################
+# ###################################################################################
+# ###################################################################################
+# ######################################################################################################################################################################
+# ###################################################################################
+# ###################################################################################
+# ###################################################################################
+
+
+
+# from sklearn.preprocessing import MinMaxScaler
+# from keras.models import Sequential
+# from keras.layers import Dense, LSTM
+# import math
+# from sklearn.metrics import classification_report
+
+# #Create a new data dataframe with only the 'Close' column
+# data = df_ori.filter(['Close'])
+
+# #Convert the dataframe to a numpy array
+# dataset = data.values
+
+# #Get the number of rows to train the model on
+# training_data_len = math.ceil( len(dataset) * 0.8)
+# #Scale the data 
+# scaler = MinMaxScaler(feature_range=(0,1))
+# scaled_data = scaler.fit_transform(dataset)
+
+# scaled_data
+
+# #Create the training data set
+# #Create the scaled training data set
+# train_data = scaled_data[0:training_data_len, :]
+
+# #Split the data into x_train and y_train data sets
+# x_train = []
+# y_train = []
+
+# for i in range(60, len(train_data)):
+#   x_train.append(train_data[i-60:i,0])
+#   y_train.append(train_data[i,0])
+#   if i <= 61:
+#     print(x_train)
+#     print(y_train)
+#     print()
+    
+# #Convert the x_train and y_train to numpy arrays
+# x_train, y_train = np.array(x_train),np.array(y_train)
+
+# #Reshape the data 
+# x_train = np.reshape(x_train, (x_train.shape[0],x_train.shape[1],1))
+# x_train.shape
+
+# #Build the LSTM model
+# model = Sequential()
+# model.add(LSTM(50,return_sequences=True, input_shape=(x_train.shape[1],1)))
+# model.add(LSTM(50, return_sequences=False))
+# model.add(Dense(25))
+# model.add(Dense(1))
+
+
+# #Compile the model
+# model.compile(optimizer='adam', loss='mean_squared_error')
+
+# #Train the model
+# model.fit(x_train, y_train, batch_size=1, epochs=1)
+
+# #Create the testing data set
+# #Create a new array containing scaled values from index 1543 to 2003
+# test_data = scaled_data[training_data_len - 60:  , :]
+
+# #Create the data set x_test and y_test 
+# x_test = []
+# y_test = dataset[training_data_len: , :]
+# for i in range(60, len(test_data)):
+#   x_test.append(test_data[i-60:i,0])
+  
+
+
+# #Convert the data to a numpy array
+# x_test = np.array(x_test)
+
+# #Reshape the data 
+# x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
+
+# #Get the models predicted price values
+# predictions = model.predict(x_test)
+# predictions = scaler.inverse_transform(predictions)
+
+# #Plot the data
+# train = data[:training_data_len]
+# valid = data[training_data_len:]
+# valid['Predictions'] = predictions
+
+# #Visualize the data
+# plt.figure(figsize=(16,8))
+# plt.title('LSTM Model')
+# plt.xlabel('Date', fontsize = 18)
+# plt.ylabel('Close Price MYR (RM)', fontsize=18)
+# plt.plot(train['Close'])
+# plt.plot(valid[['Close','Predictions']])
+# plt.legend(['Train','Val','Predictions'],loc='upper right')
+# plt.show()
+
+###################################################################################
+###################################################################################
+###################################################################################
+###################################################################################
+###################################################################################
+###################################################################################
+###################################################################################
+###################################################################################
+###################################################################################
+
+# stockQuoteList = ["MSFT", "AAPL", "BAC"]
+
+# for stockCode in stockQuoteList:
+#     df, df_ori = populateDF(stockCode)
+    
+#     populateOBV(df)
+#     populateIndicators(df)
+   
+#     populateOBVBuySellSignal(df)    
+#     # if ((df.tail(1)['Buy_Signal_Price']).isna()):
+#     df.reset_index(inplace=True)
+#     print(df.tail(1))
+#     if ((df.tail(1)['Buy_Signal_Price']).notna().any()):
+#       plotOBVCharts(df, stockCode, 60)     
+        
+    
+#     populateMACDIndicators(df)
+#     populateMACDBuySellSignal(df)
+#     plotMACDCharts(df, stockCode, 60)
+    
+#     #print(df.head())
+
+import smtplib
+import imghdr
+from email.message import EmailMessage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+def sendEmail():
+    Sender_Email = "LIAUSHEAUCHANG@gmail.com"
+    Reciever_Email = "LIAUSHEAUCHANG@gmail.com"
+    Password = input('Enter your email account password: ')
+    newMessage = EmailMessage()                         
+    newMessage['Subject'] = "Check out the new alert, Send from auto generated mail from python" 
+    newMessage['From'] = Sender_Email                   
+    newMessage['To'] = Reciever_Email                   
+    newMessage.set_content('Let me know what you think. Image attached!') 
+    for fileNameItem in fileList:
+        with open(fileNameItem, 'rb') as f:
+            image_data = f.read()
+            image_type = imghdr.what(f.name)
+            image_name = f.name
+        newMessage.add_attachment(image_data, maintype='image', subtype=image_type, filename=image_name)
+       
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        
+        smtp.login(Sender_Email, Password)              
+        smtp.send_message(newMessage)
+    
+
+def sendEmail(html, title):
+    Sender_Email = "LIAUSHEAUCHANG@gmail.com"
+    Reciever_Email= ['LIAUSHEAUCHANG@gmail.com']
+    Password = 'yuziudjjjhzqtgen'
+    newMessage = EmailMessage()                         
+    newMessage['Subject'] = title
+    newMessage['From'] = Sender_Email                   
+    newMessage['To'] = ", ".join(Reciever_Email)                 
+    #newMessage.set_content(buyItemContent + sellItemContent) 
+   
+    htmlPart = MIMEText(html, 'html')
+    # newMessage.attach(htmlPart)
+    # print(htmlPart)
+    newMessage.set_content(htmlPart)
+    # set_contentewMessage.Html(sellItemContent)
+    # for fileNameItem in buyListImages:
+    #     with open(fileNameItem, 'rb') as f:
+    #         image_data = f.read()
+    #         image_type = imghdr.what(f.name)
+    #         image_name = f.name
+    #     newMessage.add_attachment(image_data, maintype='image', subtype=image_type, filename=image_name)
+        
+    # for fileNameItem in sellListImages:
+    #     with open(fileNameItem, 'rb') as f:
+    #         image_data = f.read()
+    #         image_type = imghdr.what(f.name)
+    #         image_name = f.name
+    #     newMessage.add_attachment(image_data, maintype='image', subtype=image_type, filename=image_name)
+       
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        
+        smtp.login(Sender_Email, Password)              
+        smtp.send_message(newMessage)
+        
+    
+df = pd.DataFrame({'A' : []})
+df_ori = pd.DataFrame({'A' : []})
+stockQuoteList2 = np.array([
+                            ['5250.KL','7-ELEVEN M']
+,['0800EA.KL','ABF MALAYS']
+,['7086.KL','ABLEGROUP ']
+,['5198.KL','ABM FUJIYA']
+,['3028.KL','ACE INNOVA']
+,['7131.KL','ACME HOLDI']
+,['0218.KL','ACO GROUP ']
+,['7120.KL','ACOUSTECH ']
+,['0122.KL','ADVANCE IN']
+,['1481.KL','ADVANCE SY']
+,['5281.KL','ADVANCECON']
+,['9148.KL','ADVANCED P']
+,['7191.KL','ADVENTA BE']
+,['7146.KL','AE MULTI H']
+,['0181.KL','AEMULUS HO']
+,['6599.KL','AEON CO. (']
+,['5139.KL','AEON CREDI']
+,['5185.KL','AFFIN BANK']
+,['7145.KL','AGESON BER']
+,['7315.KL','AHB HOLDIN']
+,['7078.KL','AHMAD ZAKI']
+,['5099.KL','AIRASIA GR']
+,['5238.KL','AIRASIA X ']
+,['2658.KL','AJINOMOTO ']
+,['7609.KL','AJIYA BERH']
+,['5116.KL','AL-`AQAR H']
+,['5115.KL','ALAM MARIT']
+,['2674.KL','ALCOM GROU']
+,['2488.KL','ALLIANCE B']
+,['1163.KL','ALLIANZ MA']
+,['5269.KL','AL-SALAM R']
+,['2682.KL','AMALGAMATE']
+,['4952.KL','AMANAH HAR']
+,['5127.KL','AMANAHRAYA']
+,['1007.KL','AMCORP PRO']
+,['5293.KL','AME ELITE ']
+,['5120.KL','AMFIRST RE']
+,['3011.KL','AMLEX HOLD']
+,['1015.KL','AMMB HOLDI']
+,['7031.KL','AMTEL HOLD']
+,['5959.KL','AMVERTON B']
+, ['6351.KL','AMWAY (MAL']
+,['7083.KL','ANALABS RE']
+,['4758.KL','ANCOM BERH']
+,['0048.KL','ANCOM LOGI']
+,['6556.KL','ANN JOO RE']
+,['9342.KL','ANZO HOLDI']
+,['5568.KL','APB RESOUR']
+,['5088.KL','APEX EQUIT']
+,['7090.KL','APEX HEALT']
+,['5194.KL','APFT BERHA']
+,['5015.KL','APM AUTOMO']
+
+,['6432.KL','APOLLO FOO']
+,['0119.KL','APPASIA BE']
+,['7214.KL','A-RANK BER']
+,['7181.KL','ARB BERHAD']
+,['7007.KL','ARK RESOUR']
+,['0068.KL','ASDION BER']
+,['7722.KL','ASIA BRAND']
+,['7129.KL','ASIA FILE ']
+,['0159.KL','ASIA MEDIA']
+,['0105.KL','ASIA POLY ']
+,['4057.KL','ASIAN PAC ']
+,['7162.KL','ASTINO BER']
+,['7054.KL','ASTRAL ASI']
+,['3032.KL','ASTRAMINA ']
+,['6399.KL','ASTRO MALA']
+,['0072.KL','AT SYSTEMA']
+,['8176.KL','ATA IMS BE']
+,['7048.KL','ATLAN HOLD']
+,['5130.KL','ATRIUM REA']
+,['7099.KL','ATTA GLOBA']
+,['8885.KL','AVILLION B']
+,['7579.KL','AWC BERHAD']
+,['6888.KL','AXIATA GRO']
+,['5106.KL','AXIS REAL ']
+,['2305.KL','AYER HOLDI']
+,['5021.KL','AYS VENTUR']
+,['7005.KL','B.I.G. IND']
+,['3012.KL','BABA ECO G']
+,['0098.KL','BAHVEST RE']
+,['7251.KL','BARAKAH OF']
+,['1899.KL','BATU KAWAN']
+,['6602.KL','BCB BERHAD']
+,['0187.KL','BCM ALLIAN']
+,['5190.KL','BENALEC HO']
+,['3239.KL','BERJAYA AS']
+,['3395.KL','BERJAYA CO']
+,['5196.KL','BERJAYA FO']
+,['4219.KL','BERJAYA LA']
+,['6025.KL','BERJAYA ME']
+,['1562.KL','BERJAYA SP']
+,['5248.KL','BERMAZ AUT']
+,['9814.KL','BERTAM ALL']
+,['5258.KL','BIMB HOLDI']
+,['6173.KL','BINA DARUL']
+,['5932.KL','BINA PURI ']
+,['0195.KL','BINASAT CO']
+,['6998.KL','BINTAI KIN']
+,['5032.KL','BINTULU PO']
+,['0179.KL','BIOALPHA H']
+,['5069.KL','BLD PLANTA']
+,['0168.KL','BOILERMECH']
+,['9288.KL','BONIA CORP']
+
+,['7036.KL','BORNEO OIL']
+,['8133.KL','BOUSTEAD H']
+,['2771.KL','BOUSTEAD H']
+,['5254.KL','BOUSTEAD P']
+,['6297.KL','BOX-PAK (M']
+,['5100.KL','BP PLASTIC']
+,['9474.KL','BRAHIM''S H']
+,['8761.KL','BREM HOLDI']
+,['9938.KL','BRIGHT PAC']
+,['0011.KL','BRITE-TECH']
+,['4162.KL','BRITISH AM']
+,['7221.KL','BSL CORPOR']
+,['7188.KL','BTM RESOUR']
+,['5210.KL','BUMI ARMAD']
+,['1818.KL','BURSA MALA']
+,['2828.KL','C.I. HOLDI']
+,['7174.KL','CAB CAKARA']
+,['0191.KL','CABNET HOL']
+,['7154.KL','CAELY HOLD']
+,['2852.KL','CAHYA MATA']
+,['7128.KL','CAM RESOUR']
+,['5105.KL','CAN-ONE BE']
+,['5180.KL','CAPITALAND']
+,['0163.KL','CAREPLUS G']
+,['5257.KL','CARIMIN PE']
+,['5245.KL','CARING PHA']
+,['2836.KL','CARLSBERG ']
+,['7076.KL','CB INDUSTR']
+,['7035.KL','CCK CONSOL']
+,['3024.KL','CE TECHNOL']
+,['5195.KL','CENSOF HOL']
+,['8052.KL','CENTRAL GL']
+,['8982.KL','CEPATWAWAS']
+,['7209.KL','CHEETAH HO']
+,['2879.KL','CHEMICAL C']
+,['5273.KL','CHIN HIN G']
+,['7187.KL','CHIN HIN G']
+,['1929.KL','CHIN TECK ']
+,['5007.KL','CHIN WELL ']
+,['5229.KL','CHINA AUTO']
+,['5188.KL','CHINA OUHU']
+,['5797.KL','CHOO BEE M']
+,['7016.KL','CHUAN HUAT']
+,['1023.KL','CIMB GROUP']
+,['7117.KL','CJ CENTURY']
+,['7202.KL','CLASSIC SC']
+,['3001.KL','CLOUDARON ']
+,['7018.KL','CME GROUP ']
+,['7986.KL','CN ASIA CO']
+,['5104.KL','CNI HOLDIN']
+,['5071.KL','COASTAL CO']
+,['7205.KL','COCOALAND ']
+
+,['2127.KL','COMFORT GL']
+,['7195.KL','COMINTEL C']
+,['5136.KL','COMPLETE L']
+,['5037.KL','COMPUGATES']
+,['8044.KL','COMPUTER F']
+,['8435.KL','CONCRETE E']
+,['0102.KL','CONNECTCOU']
+,['3035.KL','COSMOS TEC']
+,['5738.KL','COUNTRY HE']
+,['5049.KL','COUNTRY VI']
+,['6718.KL','CRESCENDO ']
+,['8591.KL','CREST BUIL']
+,['3016.KL','CRG INCORP']
+,['5094.KL','CSC STEEL ']
+,['0051.KL','CUSCAPI BE']
+,['9423.KL','CWG HOLDIN']
+,['2925.KL','CYCLE & CA']
+,['7157.KL','CYL CORPOR']
+,['5082.KL','CYMAO HOLD']
+,['5184.KL','CYPARK RES']
+,['7204.KL','D&O GREEN ']
+,['7179.KL','D.B.E. GUR']
+,['4456.KL','DAGANG NEX']
+,['8125.KL','DAIBOCHI B']
+,['3484.KL','DAMANSARA ']
+,['0400GA.KL','DANAINFRA ']
+,['0400GB.KL','DANAINFRA ']
+,['0400GC.KL','DANAINFRA ']
+,['5276.KL','DANCOMECH ']
+,['8338.KL','DATAPREP H']
+,['5216.KL','DATASONIC ']
+,['0091.KL','DAYA MATER']
+,['5141.KL','DAYANG ENT']
+,['7119.KL','DEGEM BERH']
+,['5132.KL','DELEUM BER']
+,['7212.KL','DESTINI BE']
+,['0152.KL','DGB ASIA B']
+,['7277.KL','DIALOG GRO']
+,['6947.KL','DIGI.COM B']
+,['0029.KL','DIGISTAR C']
+,['0131.KL','DIVERSIFIE']
+,['7528.KL','DKLS INDUS']
+,['5908.KL','DKSH HOLDI']
+,['7114.KL','D''NONCE TE']
+,['5835.KL','DOLOMITE C']
+,['5265.KL','DOLPHIN IN']
+,['7169.KL','DOMINANT E']
+,['0205.KL','DPI HOLDIN']
+,['7198.KL','DPS RESOUR']
+,['1619.KL','DRB-HICOM ']
+,['7233.KL','DUFU TECHN']
+,['7148.KL','DUOPHARMA ']
+
+,['3948.KL','DUTALAND B']
+,['3026.KL','DUTCH LADY']
+,['7165.KL','DWL RESOUR']
+,['5178.KL','DYNACIATE ']
+,['5259.KL','E.A.TECHNI']
+,['0154.KL','EA HOLDING']
+,['3417.KL','EASTERN & ']
+,['2097.KL','EASTLAND E']
+,['2143.KL','ECM LIBRA ']
+,['8206.KL','ECO WORLD ']
+,['5283.KL','ECO WORLD ']
+,['0059.KL','ECOBUILT H']
+,['3557.KL','ECOFIRST C']
+,['5253.KL','ECONPILE H']
+,['5036.KL','EDARAN BER']
+,['7471.KL','EDEN INC. ']
+,['0107.KL','EDUSPEC HO']
+,['0064.KL','EFFICIENT ']
+,['8907.KL','EG INDUSTR']
+,['5208.KL','EITA RESOU']
+,['7182.KL','EKA NOODLE']
+,['8877.KL','EKOVEST BE']
+,['9016.KL','EKSONS COR']
+,['5228.KL','ELK-DESA R']
+,['0090.KL','ELSOFT RES']
+,['9091.KL','EMICO HOLD']
+,['6076.KL','ENCORP BER']
+,['3025.KL','ENEST GROU']
+,['7149.KL','ENG KAH CO']
+,['5056.KL','ENGTEX GRO']
+,['8613.KL','ENRA GROUP']
+,['7217.KL','EONMETALL ']
+,['7773.KL','EP MANUFAC']
+,['3021.KL','EQUITIESTR']
+,['0100.KL','ES CERAMIC']
+,['5081.KL','ESTHETICS ']
+,['6815.KL','EUPE CORPO']
+,['7208.KL','EURO HOLDI']
+,['7094.KL','EUROSPAN H']
+,['5101.KL','EVERGREEN ']
+,['0190.KL','EVERSAFE R']
+,['5205.KL','EVERSENDAI']
+,['7249.KL','EWEIN BERH']
+,['0065.KL','EXCEL FORC']
+,['2984.KL','FACB INDUS']
+,['7047.KL','FAJARBARU ']
+,['5029.KL','FAR EAST H']
+,['6041.KL','FARLIM GRO']
+,['7229.KL','FAVELLE FA']
+,['2755.KL','FCW HOLDIN']
+,['8605.KL','FEDERAL IN']
+,['5222.KL','FGV HOLDIN']
+
+,['6939.KL','FIAMMA HOL']
+,['0149.KL','FIBON BERH']
+,['3026.KL','FIBROMAT (']
+,['3107.KL','FIMA CORPO']
+,['0150.KL','FINTEC GLO']
+,['9318.KL','FITTERS DI']
+,['0116.KL','FOCUS DYNA']
+,['5197.KL','FOCUS LUMB']
+,['0157.KL','FOCUS POIN']
+,['9172.KL','FORMOSA PR']
+,['5277.KL','FOUNDPAC G']
+,['3689.KL','FRASER & N']
+,['7210.KL','FREIGHT MA']
+,['0128.KL','FRONTKEN C']
+,['9377.KL','FSBM HOLDI']
+,['0820EA.KL','FTSE BURSA']
+,['0045.KL','G NEPTUNE ']
+,['7184.KL','G3 GLOBAL ']
+,['5226.KL','GABUNGAN A']
+,['9261.KL','GADANG HOL']
+,['0206.KL','GAGASAN NA']
+,['5398.KL','GAMUDA BER']
+,['5209.KL','GAS MALAYS']
+,['0078.KL','GD EXPRESS']
+,['0198.KL','GDB HOLDIN']
+,['0104.KL','GENETEC TE']
+,['3182.KL','GENTING BE']
+,['4715.KL','GENTING MA']
+,['2291.KL','GENTING PL']
+,['3204.KL','GEORGE KEN']
+,['7197.KL','GE-SHEN CO']
+,['5079.KL','GETS GLOBA']
+,['0039.KL','GFM SERVIC']
+,['0021.KL','GHL SYSTEM']
+,['1147.KL','GLOBAL ORI']
+,['5220.KL','GLOBALTEC ']
+,['7022.KL','GLOBETRONI']
+,['5020.KL','GLOMAC BER']
+,['7382.KL','GOLDEN LAN']
+,['5649.KL','GOLDEN PHA']
+,['7192.KL','GOODWAY IN']
+,['2135.KL','GOPENG BER']
+,['7096.KL','GPA HOLDIN']
+,['3029.KL','GPP RESOUR']
+,['5592.KL','GRAND CENT']
+,['7010.KL','GRAND HOOV']
+,['0056.KL','GRAND-FLO ']
+,['0208.KL','GREATECH T']
+,['0074.KL','GREEN OCEA']
+,['0082.KL','GREEN PACK']
+,['0136.KL','GREENYIELD']
+,['9962.KL','GROMUTUAL ']
+
+,['5102.KL','GUAN CHONG']
+,['3247.KL','GUH HOLDIN']
+,['7676.KL','GUNUNG CAP']
+,['1503.KL','GUOCOLAND ']
+,['7668.KL','HAI-O ENTE']
+,['7253.KL','HANDAL ENE']
+,['3034.KL','HAP SENG C']
+,['5138.KL','HAP SENG P']
+,['2062.KL','HARBOUR-LI']
+,['7501.KL','HARN LEN C']
+,['5008.KL','HARRISONS ']
+,['5168.KL','HARTALEGA ']
+,['5187.KL','HB GLOBAL ']
+,['7105.KL','HCK CAPITA']
+,['3255.KL','HEINEKEN M']
+,['5028.KL','HEITECH PA']
+,['5121.KL','HEKTAR REA']
+,['0175.KL','HENG HUAT ']
+,['4324.KL','HENGYUAN R']
+,['5095.KL','HEVEABOARD']
+,['5151.KL','HEXTAR GLO']
+,['3298.KL','HEXZA CORP']
+,['0160.KL','HIAP HUAT ']
+,['5072.KL','HIAP TECK ']
+,['5199.KL','HIBISCUS P']
+,['8443.KL','HIL INDUST']
+,['0188.KL','HLT GLOBAL']
+,['5169.KL','HO HUP CON']
+,['9601.KL','HO WAH GEN']
+,['5165.KL','HOCK HENG ']
+,['6238.KL','HOCK SENG ']
+,['5160.KL','HOMERITZ C']
+,['5819.KL','HONG LEONG']
+,['5274.KL','HONG LEONG']
+,['1082.KL','HONG LEONG']
+,['3301.KL','HONG LEONG']
+,['5291.KL','HPMT HOLDI']
+,['0185.KL','HSS ENGINE']
+,['5062.KL','HUA YANG B']
+,['7013.KL','HUBLINE BE']
+,['5000.KL','HUME INDUS']
+,['5024.KL','HUP SENG I']
+,['8478.KL','HWA TAI IN']
+,['4251.KL','I-BERHAD']
+,['5084.KL','IBRACO BER']
+,['5108.KL','ICAPITAL.B']
+,['5255.KL','ICON OFFSH']
+,['9113.KL','ICONIC WOR']
+,['3030.KL','IDB TECHNO']
+,['9687.KL','IDEAL UNIT']
+,['0174.KL','IDIMENSION']
+,['0023.KL','IFCA MSC B']
+
+,['5606.KL','IGB BERHAD']
+,['5227.KL','IGB REAL E']
+,['5225.KL','IHH HEALTH']
+,['0401GA.KL','IHSAN SUKU']
+,['3336.KL','IJM CORPOR']
+,['2216.KL','IJM PLANTA']
+,['5268.KL','IKHMAS JAY']
+,['7222.KL','IMASPRO CO']
+,['7243.KL','IMPIANA HO']
+,['0166.KL','INARI AMER']
+,['2607.KL','INCH KENNE']
+,['9393.KL','INDUSTRONI']
+,['0094.KL','INIX TECHN']
+,['5295.KL','INNATURE B']
+,['0147.KL','INNITY COR']
+,['6262.KL','INNOPRISE ']
+,['3379.KL','INSAS BERH']
+,['0192.KL','INTA BINA ']
+,['5614.KL','INTEGRATED']
+,['1961.KL','IOI CORPOR']
+,['5249.KL','IOI PROPER']
+,['5673.KL','IPMUDA BER']
+,['5107.KL','IQ GROUP H']
+,['7183.KL','IQZAN HOLD']
+,['8834.KL','IREKA CORP']
+,['0010.KL','IRIS CORPO']
+,['1589.KL','ISKANDAR W']
+,['0209.KL','I-STONE GR']
+,['5175.KL','IVORY PROP']
+,['7043.KL','JADE MARVE']
+,['7223.KL','JADI IMAGI']
+,['0024.KL','JAG BERHAD']
+,['4723.KL','JAKS RESOU']
+,['8648.KL','JASA KITA ']
+,['4383.KL','JAYA TIASA']
+,['7152.KL','JAYCORP BE']
+,['0058.KL','JCBNEXT BE']
+,['5161.KL','JCY INTERN']
+,['8931.KL','JERASIA CA']
+,['0146.KL','JF TECHNOL']
+,['0127.KL','JHM CONSOL']
+,['8923.KL','JIANKUN IN']
+,['6769.KL','JKG LAND B']
+,['3003.KL','JM EDUCATI']
+,['3441.KL','JOHAN HOLD']
+,['7167.KL','JOHORE TIN']
+,['5192.KL','K.SENG SEN']
+,['8672.KL','KAMDAR GRO']
+,['0170.KL','KANGER INT']
+,['5247.KL','KAREX BERH']
+,['0054.KL','KARYON IND']
+,['7216.KL','KAWAN FOOD']
+
+,['3476.KL','KECK SENG ']
+,['7199.KL','KEIN HING ']
+,['0193.KL','KEJURUTERA']
+,['0151.KL','KELINGTON ']
+,['7323.KL','KEN HOLDIN']
+,['6483.KL','KENANGA IN']
+,['0835EA.KL','KENANGA KL']
+,['0834EA.KL','KENANGA KL']
+,['7161.KL','KERJAYA PR']
+,['7077.KL','KERJAYA PR']
+,['9334.KL','KESM INDUS']
+,['0036.KL','KEY ALLIAN']
+,['0143.KL','KEY ASIC B']
+,['6203.KL','KHEE SAN B']
+,['7062.KL','KHIND HOLD']
+,['6211.KL','KIA LIM BE']
+,['5371.KL','KIM HIN IN']
+,['0210.KL','KIM HIN JO']
+,['5027.KL','KIM LOONG ']
+,['0180.KL','KIM TECK C']
+,['5171.KL','KIMLUN COR']
+,['5060.KL','KINSTEEL B']
+,['5280.KL','KIP REAL E']
+,['9466.KL','KKB ENGINE']
+,['5235SS.KL','KLCC PROPE']
+,['5235SS.KL','KLCC REAL ']
+,['2453.KL','KLUANG RUB']
+,['7164.KL','KNM GROUP ']
+,['5035.KL','KNUSFORD B']
+,['6971.KL','KOBAY TECH']
+,['7017.KL','KOMARKCORP']
+,['0111.KL','K-ONE TECH']
+,['4847.KL','KONSORTIUM']
+,['7153.KL','KOSSAN RUB']
+,['0002.KL','KOTRA INDU']
+,['5878.KL','KPJ HEALTH']
+,['9121.KL','KPS CONSOR']
+,['1996.KL','KRETAM HOL']
+,['0176.KL','KRONOLOGI ']
+,['5038.KL','KSL HOLDIN']
+,['5172.KL','K-STAR SPO']
+,['2445.KL','KUALA LUMP']
+,['6874.KL','KUB MALAYS']
+,['2186.KL','KUCHAI DEV']
+,['6491.KL','KUMPULAN F']
+,['7033.KL','KUMPULAN H']
+,['9083.KL','KUMPULAN J']
+,['5843.KL','KUMPULAN P']
+,['7130.KL','KUMPULAN P']
+,['6572.KL','KWANTAS CO']
+,['8362.KL','KYM HOLDIN']
+,['0018.KL','LAMBO GROU']
+
+,['3174.KL','LAND & GEN']
+,['1643.KL','LANDMARKS ']
+,['7006.KL','LATITUDE T']
+,['9385.KL','LAY HONG B']
+,['9326.KL','LB ALUMINI']
+,['8494.KL','LBI CAPITA']
+,['5789.KL','LBS BINA G']
+,['9881.KL','LEADER STE']
+,['9628.KL','LEBTECH BE']
+,['8079.KL','LEE SWEE K']
+,['5232.KL','LEON FUAT ']
+,['6633.KL','LEONG HUP ']
+,['8745.KL','LEWEKO RES']
+,['7170.KL','LFE CORPOR']
+,['3573.KL','LIEN HOE C']
+,['7089.KL','LII HEN IN']
+,['6645.KL','LINGKARAN ']
+,['4235.KL','LION INDUS']
+,['8486.KL','LION POSIM']
+,['0182.KL','LKL INTERN']
+,['7126.KL','LONDON BIS']
+,['5284.KL','LOTTE CHEM']
+,['8303.KL','LOTUS KFM ']
+,['8621.KL','LPI CAPITA']
+,['7085.KL','LTKM BERHA']
+,['5068.KL','LUSTER IND']
+,['5143.KL','LUXCHEM CO']
+,['0075.KL','LYC HEALTH']
+,['9199.KL','LYSAGHT GA']
+,['0103.KL','M N C WIRE']
+,['0017.KL','M3 TECHNOL']
+,['1198.KL','MAA GROUP ']
+,['0140.KL','MACPIE BER']
+,['7617.KL','MAGNA PRIM']
+,['7087.KL','MAGNI-TECH']
+,['3859.KL','MAGNUM BER']
+,['8583.KL','MAH SING G']
+,['8141.KL','MAJUPERAK ']
+,['5264.KL','MALAKOFF C']
+,['1155.KL','MALAYAN BA']
+,['3794.KL','MALAYAN CE']
+,['3662.KL','MALAYAN FL']
+,['3891.KL','MALAYAN UN']
+,['5014.KL','MALAYSIA A']
+,['1171.KL','MALAYSIA B']
+,['5186.KL','MALAYSIA M']
+,['6548.KL','MALAYSIA P']
+,['5916.KL','MALAYSIA S']
+,['5098.KL','MALAYSIA S']
+,['5077.KL','MALAYSIAN ']
+,['0155.KL','MALAYSIAN ']
+,['3867.KL','MALAYSIAN ']
+
+,['1651.KL','MALAYSIAN ']
+,['4936.KL','MALPAC HOL']
+,['6181.KL','MALTON BER']
+,['0156.KL','MANAGEPAY ']
+,['3015.KL','MANFORCE G']
+,['1058.KL','MANULIFE H']
+,['3514.KL','MARCO HOLD']
+,['5078.KL','MARINE & G']
+,['7029.KL','MASTER-PAC']
+,['0189.KL','MATANG BER']
+,['5236.KL','MATRIX CON']
+,['3019.KL','MATRIX PAR']
+,['6012.KL','MAXIS BERH']
+,['7189.KL','MB WORLD G']
+,['5983.KL','MBM RESOUR']
+,['7004.KL','MCE HOLDIN']
+,['0167.KL','MCLEAN TEC']
+,['3022.KL','MCOM HOLDI']
+,['5182.KL','MCT BERHAD']
+,['5090.KL','MEDIA CHIN']
+,['4502.KL','MEDIA PRIM']
+,['3069.KL','MEGA FIRST']
+,['0081.KL','MEGA SUN C']
+,['5129.KL','MELATI EHS']
+,['3778.KL','MELEWAR IN']
+,['1694.KL','MENANG COR']
+,['5223.KL','MENTIGA CO']
+,['8192.KL','MERCURY IN']
+,['5040.KL','MERIDIAN B']
+,['7234.KL','MESB BERHA']
+,['5011.KL','MESINIAGA ']
+,['0207.KL','MESTRON HO']
+,['0207.KL','MESTRON HO']
+,['3005.KL','METRO HEAL']
+,['6149.KL','METROD HOL']
+,['0043.KL','METRONIC G']
+,['7595.KL','MGB BERHAD']
+,['5026.KL','MHC PLANTA']
+,['5286.KL','MI TECHNOV']
+,['0126.KL','MICROLINK ']
+,['5001.KL','MIECO CHIP']
+,['0112.KL','MIKRO MSC ']
+,['7935.KL','MILUX CORP']
+,['5166.KL','MINDA GLOB']
+,['7219.KL','MINETECH R']
+,['5576.KL','MINHO (M) ']
+,['5886.KL','MINTYE BER']
+,['3816.KL','MISC BERHA']
+,['9571.KL','MITRAJAYA ']
+,['8893.KL','MK LAND HO']
+,['6114.KL','MKH BERHAD']
+,['0085.KL','MLABS SYST']
+
+,['0034.KL','MMAG HOLDI']
+,['2194.KL','MMC CORPOR']
+,['3027.KL','MMIS BERHA']
+,['0113.KL','MMS VENTUR']
+,['6459.KL','MNRB HOLDI']
+,['5237.KL','MPHB CAPIT']
+,['0070.KL','MQ TECHNOL']
+,['5123.KL','MRCB-QUILL']
+,['0041.KL','MSCM HOLDI']
+,['5202.KL','MSM MALAYS']
+,['0213.KL','MTAG GROUP']
+,['5924.KL','MTD ACPI E']
+,['0092.KL','MTOUCHE TE']
+,['5152.KL','MUAR BAN L']
+,['3883.KL','MUDA HOLDI']
+,['5085.KL','MUDAJAYA G']
+,['5703.KL','MUHIBBAH E']
+,['3913.KL','MUI PROPER']
+,['3905.KL','MULPHA INT']
+,['9539.KL','MULTI-USAG']
+,['0138.KL','MY E.G. SE']
+,['5087.KL','MYCRON STE']
+,['0821EA.KL','MYETF DOW ']
+,['0827EA.KL','MYETF DOW ']
+,['0824EA.KL','MYETF MSCI']
+,['0825EA.KL','MYETF MSCI']
+,['0826EA.KL','MYETF THOM']
+,['3010.KL','MYKRIS INT']
+,['5275.KL','MYNEWS HOL']
+,['0108.KL','N2N CONNEC']
+,['5073.KL','NAIM HOLDI']
+,['9806.KL','NATIONWIDE']
+,['2038.KL','NEGRI SEMB']
+,['4707.KL','NESTLE (MA']
+,['0020.KL','NETX HOLDI']
+,['7060.KL','NEW HOONG ']
+,['0096.KL','NEXGRAM HO']
+,['7241.KL','NEXTGREEN ']
+,['7215.KL','NI HSIN RE']
+,['7139.KL','NICHE CAPI']
+,['0083.KL','NOTION VTE']
+,['0026.KL','NOVA MSC B']
+,['3006.KL','NOVA PHARM']
+,['0201.KL','NOVA WELLN']
+,['5047.KL','NPC RESOUR']
+,['5066.KL','NTPM HOLDI']
+,['5025.KL','NWP HOLDIN']
+,['4944.KL','NYLEX (MAL']
+,['5533.KL','OCB BERHAD']
+,['0049.KL','OCEANCASH ']
+,['0172.KL','OCK GROUP ']
+,['7071.KL','OCR GROUP ']
+
+,['7140.KL','OKA CORPOR']
+,['3018.KL','OLYMPIA IN']
+,['9008.KL','OMESTI BER']
+,['5260.KL','ONLY WORLD']
+,['0035.KL','OPCOM HOLD']
+,['0040.KL','OPENSYS (M']
+,['7107.KL','ORIENTAL F']
+,['4006.KL','ORIENTAL H']
+,['5827.KL','ORIENTAL I']
+,['0079.KL','ORION IXL ']
+,['5065.KL','ORNAPAPER ']
+,['5053.KL','OSK HOLDIN']
+,['0053.KL','OSK VENTUR']
+,['0153.KL','OVERSEA EN']
+,['7225.KL','P.A. RESOU']
+,['7095.KL','P.I.E. IND']
+,['6009.KL','PACIFIC & ']
+,['7052.KL','PADINI HOL']
+,['4081.KL','PAN MALAYS']
+,['1287.KL','PAN MALAYS']
+,['3719.KL','PANASONIC ']
+,['8419.KL','PANSAR BER']
+,['5125.KL','PANTECH GR']
+,['5022.KL','PAOS HOLDI']
+,['3611.KL','PARAGON GL']
+,['9407.KL','PARAGON UN']
+,['1724.KL','PARAMOUNT ']
+,['5657.KL','PARKSON HO']
+,['0022.KL','PARLO BERH']
+,['6912.KL','PASDEC HOL']
+,['0177.KL','PASUKHAS G']
+,['5212.KL','PAVILION R']
+,['5041.KL','PBA HOLDIN']
+,['6068.KL','PCCS GROUP']
+,['6254.KL','PDZ HOLDIN']
+,['5271.KL','PECCA GROU']
+,['4464.KL','PEGASUS HE']
+,['7190.KL','PELANGI PU']
+,['5231.KL','PELIKAN IN']
+,['9997.KL','PENSONIC H']
+,['7160.KL','PENTAMASTE']
+,['8346.KL','PERAK CORP']
+,['0186.KL','PERAK TRAN']
+,['7108.KL','PERDANA PE']
+,['7080.KL','PERMAJU IN']
+,['5436.KL','PERUSAHAAN']
+,['8311.KL','PESONA MET']
+,['5219.KL','PESTECH IN']
+,['0171.KL','PETERLABS ']
+,['5133.KL','PETRA ENER']
+,['3042.KL','PETRON MAL']
+,['5183.KL','PETRONAS C']
+
+,['5681.KL','PETRONAS D']
+,['6033.KL','PETRONAS G']
+,['7081.KL','PHARMANIAG']
+,['5622.KL','PIMPINAN E']
+,['0006.KL','PINEAPPLE ']
+,['1902.KL','PINEHILL P']
+,['9598.KL','PINTARAS J']
+,['7163.KL','PJBUMI BER']
+,['0038.KL','PLASTRADE ']
+,['7055.KL','PLB ENGINE']
+,['5075.KL','PLENITUDE ']
+,['9695.KL','PLS PLANTA']
+,['7172.KL','PMB TECHNO']
+,['6637.KL','PNE PCB BE']
+,['7088.KL','POH HUAT R']
+,['5080.KL','POH KONG H']
+,['8117.KL','POLY GLASS']
+,['3007.KL','POLYMER LI']
+,['4634.KL','POS MALAYS']
+,['7237.KL','POWER ROOT']
+,['0217.KL','POWERWELL ']
+,['4065.KL','PPB GROUP ']
+,['8869.KL','PRESS META']
+,['9873.KL','PRESTAR RE']
+,['5204.KL','PRESTARIAN']
+,['7168.KL','PRG HOLDIN']
+,['7123.KL','PRICEWORTH']
+,['0822EA.KL','PRINCIPAL ']
+,['0823EA.KL','PRINCIPAL ']
+,['0123.KL','PRIVASIA T']
+,['7201.KL','PROGRESSIV']
+,['8966.KL','PROLEXUS B']
+,['5070.KL','PROTASCO B']
+,['1295.KL','PUBLIC BAN']
+,['8273.KL','PUBLIC PAC']
+,['0007.KL','PUC BERHAD']
+,['6807.KL','PUNCAK NIA']
+,['7134.KL','PWF CORPOR']
+,['0196.KL','QES GROUP ']
+,['7084.KL','QL RESOURC']
+,['7544.KL','QUALITY CO']
+,['0202.KL','RADIANT GL']
+,['7498.KL','RALCO CORP']
+,['5272.KL','RANHILL HO']
+,['7765.KL','RAPID SYNE']
+,['9296.KL','RCE CAPITA']
+,['5256.KL','REACH ENER']
+,['3002.KL','RED IDEAS ']
+,['5270.KL','RED SENA B']
+,['0032.KL','REDTONE IN']
+,['7232.KL','RESINTECH ']
+,['0173.KL','REV ASIA B']
+
+,['0200.KL','REVENUE GR']
+,['9946.KL','REX INDUST']
+,['0106.KL','REXIT BERH']
+,['0037.KL','RGB INTERN']
+,['9954.KL','RGT BERHAD']
+,['1066.KL','RHB BANK B']
+,['5278.KL','RHONE MA H']
+,['5113.KL','RIMBUNAN S']
+,['2542.KL','RIVERVIEW ']
+,['9741.KL','ROHAS TECN']
+,['7803.KL','RUBBEREX C']
+,['8664.KL','S P SETIA ']
+,['8567.KL','SALCON BER']
+,['0183.KL','SALUTICA B']
+,['9822.KL','SAM ENGINE']
+,['5147.KL','SAMCHEM HO']
+,['7943.KL','SAND NISKO']
+,['0133.KL','SANICHI TE']
+,['5218.KL','SAPURA ENE']
+,['7811.KL','SAPURA IND']
+,['4596.KL','SAPURA RES']
+,['5170.KL','SARAWAK CA']
+,['9237.KL','SARAWAK CO']
+,['5126.KL','SARAWAK OI']
+,['5135.KL','SARAWAK PL']
+,['5252.KL','SASBADI HO']
+,['5157.KL','SAUDEE GRO']
+,['5207.KL','SBC CORPOR']
+,['0109.KL','SC ESTATE ']
+,['7239.KL','SCANWOLF C']
+,['0158.KL','SCC HOLDIN']
+,['7247.KL','SCGM BHD']
+,['0161.KL','SCH GROUP ']
+,['0099.KL','SCICOM (MS']
+,['4731.KL','SCIENTEX B']
+,['7045.KL','SCOMI ENER']
+,['7158.KL','SCOMI GROU']
+,['0028.KL','SCOPE INDU']
+,['0212.KL','SDS GROUP ']
+,['7073.KL','SEACERA GR']
+,['4286.KL','SEAL INCOR']
+,['5145.KL','SEALINK IN']
+,['0203.KL','SECUREMETR']
+,['0178.KL','SEDANIA IN']
+,['7053.KL','SEE HUP CO']
+,['3009.KL','SEERS BERH']
+,['9792.KL','SEG INTERN']
+,['2224.KL','SELANGOR D']
+,['9431.KL','SENI JAYA ']
+,['5213.KL','SENTORIA G']
+,['5279.KL','SERBA DINA']
+,['5163.KL','SEREMBAN E']
+
+,['7180.KL','SERN KOU R']
+,['0055.KL','SERSOL BER']
+,['5517.KL','SHANGRI-LA']
+,['7412.KL','SHH RESOUR']
+,['5173.KL','SHIN YANG ']
+,['6017.KL','SHL CONSOL']
+,['5181.KL','SIG GASES ']
+,['7246.KL','SIGNATURE ']
+,['0129.KL','SILVER RID']
+,['4197.KL','SIME DARBY']
+,['5285.KL','SIME DARBY']
+,['5288.KL','SIME DARBY']
+,['4316.KL','SIN HENG C']
+,['9776.KL','SINMAH CAP']
+,['2739.KL','SINO HUA-A']
+,['8532.KL','SINOTOP HO']
+,['7115.KL','SKB SHUTTE']
+,['7155.KL','SKP RESOUR']
+,['3008.KL','SL INNOVAT']
+,['7248.KL','SLP RESOUR']
+,['3023.KL','SMILE-LINK']
+,['7132.KL','SMIS CORPO']
+,['0117.KL','SMRT HOLDI']
+,['0169.KL','SMTRACK BE']
+,['0215.KL','SOLARVEST ']
+,['5242.KL','SOLID AUTO']
+,['0093.KL','SOLUTION G']
+,['4375.KL','SOUTH MALA']
+,['5134.KL','SOUTHERN A']
+,['5665.KL','SOUTHERN S']
+,['0216.KL','SPRING ART']
+,['7103.KL','SPRITZER B']
+,['6084.KL','STAR MEDIA']
+,['5006.KL','STELLA HOL']
+,['5006.KL','STELLA HOL']
+,['0080.KL','STRAITS IN']
+,['6904.KL','SUBUR TIAS']
+,['7207.KL','SUCCESS TR']
+,['1201.KL','SUMATEC RE']
+,['2569.KL','SUNGEI BAG']
+,['3743.KL','SUNSURIA B']
+,['5211.KL','SUNWAY BER']
+,['5263.KL','SUNWAY CON']
+,['5176.KL','SUNWAY REA']
+,['0148.KL','SUNZEN BIO']
+,['0001.KL','SUPERCOMNE']
+,['3033.KL','SUPERGENIC']
+,['7235.KL','SUPERLON H']
+,['7106.KL','SUPERMAX C']
+,['3018.KL','SUPREME CO']
+,['6521.KL','SURIA CAPI']
+,['7186.KL','SWS CAPITA']
+
+,['6139.KL','SYARIKAT T']
+,['9717.KL','SYCAL VENT']
+,['7082.KL','SYF RESOUR']
+,['1538.KL','SYMPHONY L']
+,['0050.KL','SYSTECH BH']
+,['7228.KL','T7 GLOBAL ']
+,['5012.KL','TA ANN HOL']
+,['4898.KL','TA ENTERPR']
+,['5158.KL','TA GLOBAL ']
+,['7097.KL','TA WIN HOL']
+,['4022.KL','TADMAX RES']
+,['7211.KL','TAFI INDUS']
+,['2259.KL','TALAM TRAN']
+,['8524.KL','TALIWORKS ']
+,['5191.KL','TAMBUN IND']
+,['4405.KL','TAN CHONG ']
+,['2429.KL','TANCO HOLD']
+,['5149.KL','TAS OFFSHO']
+,['5140.KL','TASCO BERH']
+,['4448.KL','TASEK CORP']
+,['0211.KL','TASHIN HOL']
+,['2054.KL','TDM BERHAD']
+,['5289.KL','TECHBOND G']
+,['0084.KL','TECHFAST H']
+,['0132.KL','TECHNODEX ']
+,['7439.KL','TECK GUAN ']
+,['7200.KL','TEK SENG H']
+,['4863.KL','TELEKOM MA']
+,['5347.KL','TENAGA NAS']
+,['9369.KL','TEO GUAN L']
+,['7252.KL','TEO SENG C']
+,['0089.KL','TEX CYCLE ']
+,['8702.KL','TEXCHEM RE']
+,['0145.KL','TFP SOLUTI']
+,['7206.KL','TH HEAVY E']
+,['5112.KL','TH PLANTAT']
+,['9075.KL','THETA EDGE']
+,['7034.KL','THONG GUAN']
+,['0012.KL','THREE-A RE']
+,['7889.KL','THRIVEN GL']
+,['7374.KL','TIEN WAH P']
+,['7079.KL','TIGER SYNE']
+,['7854.KL','TIMBERWELL']
+,['5031.KL','TIME DOTCO']
+,['8397.KL','TIONG NAM ']
+,['5239.KL','TITIJAYA L']
+,['0101.KL','TMC LIFE S']
+,['7230.KL','TOMEI CONS']
+,['7285.KL','TOMYPAK HO']
+,['5010.KL','TONG HERR ']
+,['7113.KL','TOP GLOVE ']
+,['3013.KL','TOPVISION ']
+
+,['5111.KL','TOWER REAL']
+,['7173.KL','TOYO INK G']
+,['7176.KL','TPC PLUS B']
+,['0833EA.KL','TRADEPLUS ']
+,['0832EA.KL','TRADEPLUS ']
+,['0831EA.KL','TRADEPLUS ']
+,['0830EA.KL','TRADEPLUS ']
+,['0829EA.KL','TRADEPLUS ']
+,['0829EB.KL','TRADEPLUS ']
+,['0828EA.KL','TRADEPLUS ']
+,['7218.KL','TRANSOCEAN']
+,['5054.KL','TRC SYNERG']
+,['0199.KL','TRI-MODE S']
+,['0118.KL','TRIVE PROP']
+,['5401.KL','TROPICANA ']
+,['9059.KL','TSH RESOUR']
+,['5042.KL','TSR CAPITA']
+,['3020.KL','TT VISION ']
+,['5230.KL','TUNE PROTE']
+,['5167.KL','TURBO-MECH']
+,['4359.KL','TURIYA BER']
+,['7100.KL','UCHI TECHN']
+,['0005.KL','UCREST BER']
+,['1368.KL','UEM EDGENT']
+,['5148.KL','UEM SUNRIS']
+,['7137.KL','UMS HOLDIN']
+,['7227.KL','UMS-NEIKEN']
+,['4588.KL','UMW HOLDIN']
+,['3017.KL','UNI WALL A']
+,['7091.KL','UNIMECH GR']
+,['5005.KL','UNISEM (M)']
+,['2593.KL','UNITED MAL']
+,['2089.KL','UNITED PLA']
+,['7133.KL','UNITED U-L']
+,['5200.KL','UOA DEVELO']
+,['5110.KL','UOA REAL E']
+,['7757.KL','UPA CORPOR']
+,['5292.KL','UWC BERHAD']
+,['7250.KL','UZMA BERHA']
+,['6963.KL','V.S. INDUS']
+,['5243.KL','VELESTO EN']
+,['4995.KL','VERSATILE ']
+,['7240.KL','VERTICE BE']
+,['0120.KL','VISDYNAMIC']
+  ,['0097.KL','VITROX COR']
+,['0069.KL','VIVOCOM IN']
+,['7070.KL','VIZIONE HO']
+,['0060.KL','VORTEX CON']
+,['0066.KL','VSOLAR GRO']
+,['5162.KL','VSTECS BER']
+,['5142.KL','WAH SEONG ']
+,['7203.KL','WANG-ZHENG']
+
+,['5016.KL','WARISAN TC']
+,['7226.KL','WATTA HOLD']
+,['3565.KL','WCE HOLDIN']
+,['9679.KL','WCT HOLDIN']
+,['0197.KL','WEGMANS HO']
+,['7231.KL','WELLCALL H']
+,['5246.KL','WESTPORTS ']
+,['5009.KL','WHITE HORS']
+,['0162.KL','WIDAD GROU']
+,['7692.KL','WIDETECH (']
+,['0008.KL','WILLOWGLEN']
+,['0141.KL','WINTONI GR']
+,['6378.KL','WMG HOLDIN']
+,['7050.KL','WONG ENGIN']
+,['7025.KL','WOODLANDOR']
+,['4243.KL','WTK HOLDIN']
+,['7245.KL','WZ SATU BE']
+,['7121.KL','XIAN LENG ']
+,['5156.KL','XIDELANG H']
+,['5267.KL','XIN HWA HO']
+,['0095.KL','XINGHE HOL']
+,['0165.KL','XOX BHD']
+,['7003.KL','Y&G CORPOR']
+,['7178.KL','Y.S.P.SOUT']
+,['0025.KL','YBS INTERN']
+,['5584.KL','YEE LEE CO']
+,['0086.KL','YGL CONVER']
+,['5048.KL','YI-LAI BER']
+,['7293.KL','YINSON HOL']
+,['7020.KL','YKGI HOLDI']
+,['7014.KL','YLI HOLDIN']
+,['3158.KL','YNH PROPER']
+,['7066.KL','YONG TAI B']
+,['5159.KL','YOONG ONN ']
+,['4677.KL','YTL CORPOR']
+,['5109.KL','YTL HOSPIT']
+,['6742.KL','YTL POWER ']
+,['7028.KL','ZECON BERH']
+,['2283.KL','ZELAN BERH']
+,['5131.KL','ZHULIAN CO']
+
+                     ])
+
+isValid = 1
+stockCode = ""
+for x in range(0, stockQuoteList2.shape[0]):
+    
+    for y in range(0, stockQuoteList2.shape[1]):
+       
+        if(y==0):
+            stockCode = stockQuoteList2[x,y]
+            try:
+               
+                df, df_ori = populateDF(stockCode)   
+                print(stockCode)
+                df['Original_StockCode'] = stockCode
+                populateSMAIndicators(df)
+                
+                df.reset_index(inplace=True)
+                populate_SMA_Mid_BuySellSignal(df)
+            except Exception as e:
+                print(e)
+                isValid = 0
+                print ('enter into error block - ' + stockCode)
+                
+                continue
+            
+           
+        if y==1:
+            if isValid == 1: 
+                stockName = stockQuoteList2[x,y]
+                print(stockName)
+                print(df.tail(1))
+                # if ((df.tail(1)['Buy_Signal_Price']).notna().any()):
+                if((df.tail(1)['Trend'].item()) == 'Uptrend'):
+                    # print((str)(df.tail(1)['Buy_Signal_Price'].item()))
+                    print('Before1')
+                    plotSMA_ST_Charts(df, stockCode, stockName, 900, 'Buy',df.tail(1)['Buy_Signal_Price'].item()) 
+                    print('After1')
+                else:
+                # elif ((df.tail(1)['Sell_Signal_Price']).notna().any()):
+                    # print((str)(df.tail(1)['Sell_Signal_Price'].item()))
+                    print('Before2')
+                    plotSMA_ST_Charts(df, stockCode, stockName, 900, 'Sell',df.tail(1)['Sell_Signal_Price'].item())
+                    print('After1')
+            isValid = 1
+                
+ 
+# sendEmail()       
+
+# print(dailySellList)
+
+sellHtml = "<table>"
+sellHtml = sellHtml +"<tr><td colspan = '3'>Sell List</td></tr>"
+sellHtml = sellHtml + "<tr><td>StockCode</td><td>StockName</td><td>Price</td></tr>"
+
+for sellItem in dailySellList:
+    sellListImages.append((str)(sellItem[0]))
+    sellHtml = sellHtml + ("<tr>")
+    sellHtml = sellHtml +"<td>" +(str)(sellItem[1]) +"</td><td>" +(str)(sellItem[2]) +"</td><td>" +(str)(sellItem[3]) +"</td>" 
+    sellHtml = sellHtml +"</tr>"
+   
+sellHtml = sellHtml + "</table>"
+sellHtml = sellHtml + "</body></html>"
+
+
+buyHtml = "<html><head><style>table, th, td {  border: 1px solid black;}</style></head><body>"
+buyHtml = buyHtml + "<table>"
+buyHtml = buyHtml + "<tr><td colspan = '5'>Buy List</td></tr>"
+buyHtml = buyHtml + "<tr><td>StockCode</td><td>StockName</td><td>Price</td><td>Target</td><td>Stop Loss</td></tr>"
+
+for buyItem in dailyBuyList:
+    buyListImages.append((str)(buyItem[0]))
+    buyHtml = buyHtml + ("<tr>")
+    buyHtml = buyHtml +"<td>" +(str)(buyItem[1]) +"</td><td>" +(str)(buyItem[2]) +"</td><td>" +(str)(buyItem[3]) +"</td><td>" +(str)("{:.2f}".format((float(buyItem[3])*1.12)))+"</td><td>"+(str)("{:.2f}".format(float(buyItem[3])*0.92)) +"</td>"
+    buyHtml = buyHtml +"</tr>"
+buyHtml = buyHtml + "</table>"
+# sendEmail(buyHtml + sellHtml, "Stock Alert [MY] : Category A (Short Term Investment)  from Automated Bot Calculation"  ) 
+
+
+
+
+
+
+
