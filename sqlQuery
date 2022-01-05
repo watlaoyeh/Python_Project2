@@ -1,0 +1,37 @@
+/****** Script for SelectTopNRows command from SSMS  ******/
+SELECT TOP (1000) [Source_Parent_City]
+      ,[Target_Child_City]
+      ,[Type]
+      ,[Weight]
+  FROM [SNA].[dbo].[Tracing_V1]
+
+  Create Table Fact_Edges_City_V1
+  (
+		[Source_Parent_City] nvarchar(255)
+      ,[Target_Child_City] nvarchar(255)
+      ,[Type] nvarchar(255)
+      ,[Weight] int
+
+
+
+  )
+
+
+
+
+   SELECT a.*, b.City FROM [dbo].[SourceData] a left join [dbo].[SourceData] b
+  on a.P = b.TargetPatient
+
+
+  SELECT a.*, b.City FROM [dbo].[SourceData] a left join [dbo].[SourceData] b
+  on a.P = b.TargetPatient
+  where a.P NOT IN ('0','NA','C')
+
+
+  SELECT DISTINCT City FROM [dbo].[SourceData]
+  SELECT DISTINCT  LEFT(City,CHARINDEX(' ',City + ' ')-1)  from [dbo].[SourceData] order by 1 desc
+
+    SELECT a.*, b.City FROM [dbo].[SourceData] a left join [dbo].[SourceData] b
+  on a.P = b.TargetPatient
+  where a.P NOT IN ('0','NA','C')
+  and a.City != b.City order by 1 asc
