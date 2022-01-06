@@ -28,10 +28,26 @@ SELECT TOP (1000) [Source_Parent_City]
   where a.P NOT IN ('0','NA','C')
 
 
-  SELECT DISTINCT City FROM [dbo].[SourceData]
+  SELECT DISTINCT City FROM [dbo].[SourceData] order by 1 
   SELECT DISTINCT  LEFT(City,CHARINDEX(' ',City + ' ')-1)  from [dbo].[SourceData] order by 1 desc
 
-    SELECT a.*, b.City FROM [dbo].[SourceData] a left join [dbo].[SourceData] b
-  on a.P = b.TargetPatient
-  where a.P NOT IN ('0','NA','C')
-  and a.City != b.City order by 1 asc
+  SELECT Source.City as Source_Parent_City, Target.City as Target_Child_City, 'Directed' as Type, 1 as Weight FROM [dbo].[SourceData] Target left join [dbo].[SourceData] Source
+  on Target.P = Source.TargetPatient
+  join dbo.Nodes dimSourceCity on dimSourceCity.Name = Source.City
+  join dbo.Nodes dimTargetCity on dimTargetCity.Name = Target.City
+  where Target.P NOT IN ('0','NA','C')
+  and Target.City != Source.City 
+  and Source.City != ''
+  and Target.City != ''
+  order by 1 asc
+
+
+  SELECT LEFT(Source.City,CHARINDEX(' ',Source.City + ' ')-1) as Source_Parent_City, LEFT(Target.City,CHARINDEX(' ',Target.City + ' ')-1) as Target_Child_City, 'Directed' as Type, 1 as Weight FROM [dbo].[SourceData] Target left join [dbo].[SourceData] Source
+  on Target.P = Source.TargetPatient
+  join dbo.Nodes dimSourceCity on dimSourceCity.Name = LEFT(Source.City,CHARINDEX(' ',Source.City + ' ')-1)
+  join dbo.Nodes dimTargetCity on dimTargetCity.Name = LEFT(Target.City,CHARINDEX(' ',Target.City + ' ')-1)
+  where Target.P NOT IN ('0','NA','C')
+  and Target.City != Source.City 
+  and Source.City != ''
+  and Target.City != ''
+  order by 1 asc
