@@ -1,0 +1,885 @@
+<?xml version="1.0"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+  DTS:refId="Package"
+  DTS:CreationDate="1/5/2022 11:45:49 PM"
+  DTS:CreationName="Microsoft.Package"
+  DTS:CreatorComputerName="LAPTOP-5R984S34"
+  DTS:CreatorName="LAPTOP-5R984S34\LiauS"
+  DTS:DTSID="{252D0779-68DB-4697-B499-85FD5429D24A}"
+  DTS:ExecutableType="Microsoft.Package"
+  DTS:LastModifiedProductVersion="15.0.2000.170"
+  DTS:LocaleID="1033"
+  DTS:ObjectName="Step4_Fact_Edges_V1"
+  DTS:PackageType="5"
+  DTS:VersionBuild="6"
+  DTS:VersionGUID="{0AC50CA9-5B50-445B-875B-5B674DCBAC48}">
+  <DTS:Property
+    DTS:Name="PackageFormatVersion">8</DTS:Property>
+  <DTS:ConnectionManagers>
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[localhost.SNA]"
+      DTS:CreationName="OLEDB"
+      DTS:DTSID="{BD054AA8-FCA9-4BBF-81C1-5B4E09599B8B}"
+      DTS:ObjectName="localhost.SNA">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectRetryCount="1"
+          DTS:ConnectRetryInterval="5"
+          DTS:ConnectionString="Data Source=localhost;Initial Catalog=SNA;Provider=SQLNCLI11.1;Integrated Security=SSPI;Auto Translate=False;" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[localhost.SNA 1]"
+      DTS:CreationName="OLEDB"
+      DTS:DTSID="{7A280764-8FFB-4D9A-A075-DCC0428586FF}"
+      DTS:ObjectName="localhost.SNA 1">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectRetryCount="1"
+          DTS:ConnectRetryInterval="5"
+          DTS:ConnectionString="Data Source=localhost;Initial Catalog=SNA;Provider=SQLNCLI11.1;Integrated Security=SSPI;Auto Translate=False;" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[localhost.SNA 2]"
+      DTS:CreationName="OLEDB"
+      DTS:DTSID="{78A6310F-F66A-4DB3-9643-8C2C37AE99E8}"
+      DTS:ObjectName="localhost.SNA 2">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectRetryCount="1"
+          DTS:ConnectRetryInterval="5"
+          DTS:ConnectionString="Data Source=localhost;Initial Catalog=SNA;Provider=SQLNCLI11.1;Integrated Security=SSPI;Auto Translate=False;" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+  </DTS:ConnectionManagers>
+  <DTS:Variables />
+  <DTS:Executables>
+    <DTS:Executable
+      DTS:refId="Package\Populate Face Edges"
+      DTS:CreationName="Microsoft.Pipeline"
+      DTS:Description="Data Flow Task"
+      DTS:DTSID="{BC11912C-FD70-4520-9B51-58EEA01462BF}"
+      DTS:ExecutableType="Microsoft.Pipeline"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Populate Face Edges"
+      DTS:TaskContact="Performs high-performance data extraction, transformation and loading;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <pipeline
+          version="1">
+          <components>
+            <component
+              refId="Package\Populate Face Edges\Fact_Edges_V1"
+              componentClassID="Microsoft.OLEDBDestination"
+              contactInfo="OLE DB Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;4"
+              description="OLE DB Destination"
+              name="Fact_Edges_V1"
+              usesDispositions="true"
+              version="4">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset">[dbo].[Fact_Edges_City_V1]</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property
+                  dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Forces the use of the DefaultCodePage property value when describing character data."
+                  name="AlwaysUseDefaultCodePage">false</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">3</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
+                  name="FastLoadKeepIdentity">false</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Indicates whether the columns containing null will have null inserted in the destination. If false, columns containing null will have their default values inserted at the destination. Applies only if fast load is turned on."
+                  name="FastLoadKeepNulls">false</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies options to be used with fast load.  Applies only if fast load is turned on."
+                  name="FastLoadOptions">TABLOCK,CHECK_CONSTRAINTS</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies when commits are issued during data insertion.  A value of 0 specifies that one commit will be issued at the end of data insertion.  Applies only if fast load is turned on."
+                  name="FastLoadMaxInsertCommitSize">2147483647</property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\Populate Face Edges\Fact_Edges_V1.Connections[OleDbConnection]"
+                  connectionManagerID="Package.ConnectionManagers[localhost.SNA 1]"
+                  connectionManagerRefId="Package.ConnectionManagers[localhost.SNA 1]"
+                  description="The OLE DB runtime connection used to access the database."
+                  name="OleDbConnection" />
+              </connections>
+              <inputs>
+                <input
+                  refId="Package\Populate Face Edges\Fact_Edges_V1.Inputs[OLE DB Destination Input]"
+                  errorOrTruncationOperation="Insert"
+                  errorRowDisposition="FailComponent"
+                  hasSideEffects="true"
+                  name="OLE DB Destination Input">
+                  <inputColumns>
+                    <inputColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V1.Inputs[OLE DB Destination Input].Columns[Source_Parent_City]"
+                      cachedDataType="i4"
+                      cachedName="Source_Parent_City"
+                      externalMetadataColumnId="Package\Populate Face Edges\Fact_Edges_V1.Inputs[OLE DB Destination Input].ExternalColumns[Source_Parent_City]"
+                      lineageId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].Columns[Source_Parent_City]" />
+                    <inputColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V1.Inputs[OLE DB Destination Input].Columns[Target_Child_City]"
+                      cachedDataType="i4"
+                      cachedName="Target_Child_City"
+                      externalMetadataColumnId="Package\Populate Face Edges\Fact_Edges_V1.Inputs[OLE DB Destination Input].ExternalColumns[Target_Child_City]"
+                      lineageId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].Columns[Target_Child_City]" />
+                    <inputColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V1.Inputs[OLE DB Destination Input].Columns[Type]"
+                      cachedDataType="wstr"
+                      cachedLength="255"
+                      cachedName="Type"
+                      externalMetadataColumnId="Package\Populate Face Edges\Fact_Edges_V1.Inputs[OLE DB Destination Input].ExternalColumns[Type]"
+                      lineageId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].Columns[Type]" />
+                    <inputColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V1.Inputs[OLE DB Destination Input].Columns[Weight]"
+                      cachedDataType="i4"
+                      cachedName="Weight"
+                      externalMetadataColumnId="Package\Populate Face Edges\Fact_Edges_V1.Inputs[OLE DB Destination Input].ExternalColumns[Weight]"
+                      lineageId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].Columns[Weight]" />
+                  </inputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V1.Inputs[OLE DB Destination Input].ExternalColumns[Source_Parent_City]"
+                      dataType="wstr"
+                      length="255"
+                      name="Source_Parent_City" />
+                    <externalMetadataColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V1.Inputs[OLE DB Destination Input].ExternalColumns[Target_Child_City]"
+                      dataType="wstr"
+                      length="255"
+                      name="Target_Child_City" />
+                    <externalMetadataColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V1.Inputs[OLE DB Destination Input].ExternalColumns[Type]"
+                      dataType="wstr"
+                      length="255"
+                      name="Type" />
+                    <externalMetadataColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V1.Inputs[OLE DB Destination Input].ExternalColumns[Weight]"
+                      dataType="i4"
+                      name="Weight" />
+                  </externalMetadataColumns>
+                </input>
+              </inputs>
+              <outputs>
+                <output
+                  refId="Package\Populate Face Edges\Fact_Edges_V1.Outputs[OLE DB Destination Error Output]"
+                  exclusionGroup="1"
+                  isErrorOut="true"
+                  name="OLE DB Destination Error Output"
+                  synchronousInputId="Package\Populate Face Edges\Fact_Edges_V1.Inputs[OLE DB Destination Input]">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V1.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\Populate Face Edges\Fact_Edges_V1.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V1.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\Populate Face Edges\Fact_Edges_V1.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+            <component
+              refId="Package\Populate Face Edges\Fact_Edges_V2"
+              componentClassID="Microsoft.OLEDBDestination"
+              contactInfo="OLE DB Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;4"
+              description="OLE DB Destination"
+              name="Fact_Edges_V2"
+              usesDispositions="true"
+              version="4">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset">[dbo].[Fact_Edges_City_V2]</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property
+                  dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Forces the use of the DefaultCodePage property value when describing character data."
+                  name="AlwaysUseDefaultCodePage">false</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">3</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
+                  name="FastLoadKeepIdentity">false</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Indicates whether the columns containing null will have null inserted in the destination. If false, columns containing null will have their default values inserted at the destination. Applies only if fast load is turned on."
+                  name="FastLoadKeepNulls">false</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies options to be used with fast load.  Applies only if fast load is turned on."
+                  name="FastLoadOptions">TABLOCK,CHECK_CONSTRAINTS</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies when commits are issued during data insertion.  A value of 0 specifies that one commit will be issued at the end of data insertion.  Applies only if fast load is turned on."
+                  name="FastLoadMaxInsertCommitSize">2147483647</property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\Populate Face Edges\Fact_Edges_V2.Connections[OleDbConnection]"
+                  connectionManagerID="Package.ConnectionManagers[localhost.SNA]"
+                  connectionManagerRefId="Package.ConnectionManagers[localhost.SNA]"
+                  description="The OLE DB runtime connection used to access the database."
+                  name="OleDbConnection" />
+              </connections>
+              <inputs>
+                <input
+                  refId="Package\Populate Face Edges\Fact_Edges_V2.Inputs[OLE DB Destination Input]"
+                  errorOrTruncationOperation="Insert"
+                  errorRowDisposition="FailComponent"
+                  hasSideEffects="true"
+                  name="OLE DB Destination Input">
+                  <inputColumns>
+                    <inputColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V2.Inputs[OLE DB Destination Input].Columns[Source_Parent_City]"
+                      cachedDataType="i4"
+                      cachedName="Source_Parent_City"
+                      externalMetadataColumnId="Package\Populate Face Edges\Fact_Edges_V2.Inputs[OLE DB Destination Input].ExternalColumns[Source_Parent_City]"
+                      lineageId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].Columns[Source_Parent_City]" />
+                    <inputColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V2.Inputs[OLE DB Destination Input].Columns[Target_Child_City]"
+                      cachedDataType="i4"
+                      cachedName="Target_Child_City"
+                      externalMetadataColumnId="Package\Populate Face Edges\Fact_Edges_V2.Inputs[OLE DB Destination Input].ExternalColumns[Target_Child_City]"
+                      lineageId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].Columns[Target_Child_City]" />
+                    <inputColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V2.Inputs[OLE DB Destination Input].Columns[Type]"
+                      cachedDataType="wstr"
+                      cachedLength="255"
+                      cachedName="Type"
+                      externalMetadataColumnId="Package\Populate Face Edges\Fact_Edges_V2.Inputs[OLE DB Destination Input].ExternalColumns[Type]"
+                      lineageId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].Columns[Type]" />
+                    <inputColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V2.Inputs[OLE DB Destination Input].Columns[Weight]"
+                      cachedDataType="i4"
+                      cachedName="Weight"
+                      externalMetadataColumnId="Package\Populate Face Edges\Fact_Edges_V2.Inputs[OLE DB Destination Input].ExternalColumns[Weight]"
+                      lineageId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].Columns[Weight]" />
+                  </inputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V2.Inputs[OLE DB Destination Input].ExternalColumns[Source_Parent_City]"
+                      dataType="wstr"
+                      length="255"
+                      name="Source_Parent_City" />
+                    <externalMetadataColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V2.Inputs[OLE DB Destination Input].ExternalColumns[Target_Child_City]"
+                      dataType="wstr"
+                      length="255"
+                      name="Target_Child_City" />
+                    <externalMetadataColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V2.Inputs[OLE DB Destination Input].ExternalColumns[Type]"
+                      dataType="wstr"
+                      length="255"
+                      name="Type" />
+                    <externalMetadataColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V2.Inputs[OLE DB Destination Input].ExternalColumns[Weight]"
+                      dataType="i4"
+                      name="Weight" />
+                  </externalMetadataColumns>
+                </input>
+              </inputs>
+              <outputs>
+                <output
+                  refId="Package\Populate Face Edges\Fact_Edges_V2.Outputs[OLE DB Destination Error Output]"
+                  exclusionGroup="1"
+                  isErrorOut="true"
+                  name="OLE DB Destination Error Output"
+                  synchronousInputId="Package\Populate Face Edges\Fact_Edges_V2.Inputs[OLE DB Destination Input]">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V2.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\Populate Face Edges\Fact_Edges_V2.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Fact_Edges_V2.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\Populate Face Edges\Fact_Edges_V2.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+            <component
+              refId="Package\Populate Face Edges\Source Data Table"
+              componentClassID="Microsoft.OLEDBSource"
+              contactInfo="OLE DB Source;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;7"
+              description="OLE DB Source"
+              name="Source Data Table"
+              usesDispositions="true"
+              version="7">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset"></property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property
+                  dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor">SELECT dimSourceCity.Id as Source_Parent_City, dimTargetCity.Id as Target_Child_City, 
+cast('Directed' as nvarchar(255))as Type, 1 as Weight FROM [dbo].[SourceData] Target left join [dbo].[SourceData] Source
+  on Target.P = Source.TargetPatient
+  left join dbo.Nodes dimSourceCity on dimSourceCity.Name = Source.City
+  left join dbo.Nodes dimTargetCity on dimTargetCity.Name = Target.City
+  where Target.P NOT IN ('0','NA','C')
+  and Target.City != Source.City 
+  and Source.City != ''
+  and Target.City != ''
+  order by 1 asc</property>
+                <property
+                  dataType="System.String"
+                  description="The variable that contains the SQL command to be executed."
+                  name="SqlCommandVariable"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Forces the use of the DefaultCodePage property value when describing character data."
+                  name="AlwaysUseDefaultCodePage">false</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">2</property>
+                <property
+                  dataType="System.String"
+                  description="The mappings between the parameters in the SQL command and variables."
+                  name="ParameterMapping"></property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\Populate Face Edges\Source Data Table.Connections[OleDbConnection]"
+                  connectionManagerID="Package.ConnectionManagers[localhost.SNA]"
+                  connectionManagerRefId="Package.ConnectionManagers[localhost.SNA]"
+                  description="The OLE DB runtime connection used to access the database."
+                  name="OleDbConnection" />
+              </connections>
+              <outputs>
+                <output
+                  refId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output]"
+                  name="OLE DB Source Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].Columns[Source_Parent_City]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].ExternalColumns[Source_Parent_City]"
+                      lineageId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].Columns[Source_Parent_City]"
+                      name="Source_Parent_City"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].Columns[Target_Child_City]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].ExternalColumns[Target_Child_City]"
+                      lineageId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].Columns[Target_Child_City]"
+                      name="Target_Child_City"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].Columns[Type]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].ExternalColumns[Type]"
+                      length="255"
+                      lineageId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].Columns[Type]"
+                      name="Type"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].Columns[Weight]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].ExternalColumns[Weight]"
+                      lineageId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].Columns[Weight]"
+                      name="Weight"
+                      truncationRowDisposition="FailComponent" />
+                  </outputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].ExternalColumns[Source_Parent_City]"
+                      dataType="i4"
+                      name="Source_Parent_City" />
+                    <externalMetadataColumn
+                      refId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].ExternalColumns[Target_Child_City]"
+                      dataType="i4"
+                      name="Target_Child_City" />
+                    <externalMetadataColumn
+                      refId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].ExternalColumns[Type]"
+                      dataType="wstr"
+                      length="255"
+                      name="Type" />
+                    <externalMetadataColumn
+                      refId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output].ExternalColumns[Weight]"
+                      dataType="i4"
+                      name="Weight" />
+                  </externalMetadataColumns>
+                </output>
+                <output
+                  refId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Error Output]"
+                  isErrorOut="true"
+                  name="OLE DB Source Error Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Error Output].Columns[Source_Parent_City]"
+                      dataType="i4"
+                      lineageId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Error Output].Columns[Source_Parent_City]"
+                      name="Source_Parent_City" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Error Output].Columns[Target_Child_City]"
+                      dataType="i4"
+                      lineageId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Error Output].Columns[Target_Child_City]"
+                      name="Target_Child_City" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Error Output].Columns[Type]"
+                      dataType="wstr"
+                      length="255"
+                      lineageId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Error Output].Columns[Type]"
+                      name="Type" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Error Output].Columns[Weight]"
+                      dataType="i4"
+                      lineageId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Error Output].Columns[Weight]"
+                      name="Weight" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+            <component
+              refId="Package\Populate Face Edges\Source Data Table with clean Cities"
+              componentClassID="Microsoft.OLEDBSource"
+              contactInfo="OLE DB Source;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;7"
+              description="OLE DB Source"
+              name="Source Data Table with clean Cities"
+              usesDispositions="true"
+              version="7">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset"></property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property
+                  dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor">SELECT 
+  --LEFT(Source.City,CHARINDEX(' ',Source.City + ' ')-1), 
+  dimSourceCity.Id as Source_Parent_City, 
+  --LEFT(Target.City,CHARINDEX(' ',Target.City + ' ')-1), 
+  dimTargetCity.Id as Target_Child_City, 
+  cast('Directed' as nvarchar(255)) as Type, 1 as Weight FROM [dbo].[SourceData] Target left join [dbo].[SourceData] Source
+  on Target.P = Source.TargetPatient
+  left join dbo.Nodes dimSourceCity on dimSourceCity.Name = LEFT(Source.City,CHARINDEX(' ',Source.City + ' ')-1)
+  left join dbo.Nodes dimTargetCity on dimTargetCity.Name = LEFT(Target.City,CHARINDEX(' ',Target.City + ' ')-1)
+  where Target.P NOT IN ('0','NA','C')
+  and Target.City != Source.City 
+  and Source.City != ''
+  and Target.City != ''
+  order by 1 asc</property>
+                <property
+                  dataType="System.String"
+                  description="The variable that contains the SQL command to be executed."
+                  name="SqlCommandVariable"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Forces the use of the DefaultCodePage property value when describing character data."
+                  name="AlwaysUseDefaultCodePage">false</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">2</property>
+                <property
+                  dataType="System.String"
+                  description="The mappings between the parameters in the SQL command and variables."
+                  name="ParameterMapping"></property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\Populate Face Edges\Source Data Table with clean Cities.Connections[OleDbConnection]"
+                  connectionManagerID="Package.ConnectionManagers[localhost.SNA]"
+                  connectionManagerRefId="Package.ConnectionManagers[localhost.SNA]"
+                  description="The OLE DB runtime connection used to access the database."
+                  name="OleDbConnection" />
+              </connections>
+              <outputs>
+                <output
+                  refId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output]"
+                  name="OLE DB Source Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].Columns[Source_Parent_City]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].ExternalColumns[Source_Parent_City]"
+                      lineageId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].Columns[Source_Parent_City]"
+                      name="Source_Parent_City"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].Columns[Target_Child_City]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].ExternalColumns[Target_Child_City]"
+                      lineageId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].Columns[Target_Child_City]"
+                      name="Target_Child_City"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].Columns[Type]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].ExternalColumns[Type]"
+                      length="255"
+                      lineageId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].Columns[Type]"
+                      name="Type"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].Columns[Weight]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].ExternalColumns[Weight]"
+                      lineageId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].Columns[Weight]"
+                      name="Weight"
+                      truncationRowDisposition="FailComponent" />
+                  </outputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].ExternalColumns[Source_Parent_City]"
+                      dataType="i4"
+                      name="Source_Parent_City" />
+                    <externalMetadataColumn
+                      refId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].ExternalColumns[Target_Child_City]"
+                      dataType="i4"
+                      name="Target_Child_City" />
+                    <externalMetadataColumn
+                      refId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].ExternalColumns[Type]"
+                      dataType="wstr"
+                      length="255"
+                      name="Type" />
+                    <externalMetadataColumn
+                      refId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output].ExternalColumns[Weight]"
+                      dataType="i4"
+                      name="Weight" />
+                  </externalMetadataColumns>
+                </output>
+                <output
+                  refId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Error Output]"
+                  isErrorOut="true"
+                  name="OLE DB Source Error Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Error Output].Columns[Source_Parent_City]"
+                      dataType="i4"
+                      lineageId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Error Output].Columns[Source_Parent_City]"
+                      name="Source_Parent_City" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Error Output].Columns[Target_Child_City]"
+                      dataType="i4"
+                      lineageId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Error Output].Columns[Target_Child_City]"
+                      name="Target_Child_City" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Error Output].Columns[Type]"
+                      dataType="wstr"
+                      length="255"
+                      lineageId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Error Output].Columns[Type]"
+                      name="Type" />
+                    <outputColumn
+                      refId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Error Output].Columns[Weight]"
+                      dataType="i4"
+                      lineageId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Error Output].Columns[Weight]"
+                      name="Weight" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+          </components>
+          <paths>
+            <path
+              refId="Package\Populate Face Edges.Paths[OLE DB Source Output]"
+              endId="Package\Populate Face Edges\Fact_Edges_V1.Inputs[OLE DB Destination Input]"
+              name="OLE DB Source Output"
+              startId="Package\Populate Face Edges\Source Data Table.Outputs[OLE DB Source Output]" />
+            <path
+              refId="Package\Populate Face Edges.Paths[OLE DB Source Output1]"
+              endId="Package\Populate Face Edges\Fact_Edges_V2.Inputs[OLE DB Destination Input]"
+              name="OLE DB Source Output"
+              startId="Package\Populate Face Edges\Source Data Table with clean Cities.Outputs[OLE DB Source Output]" />
+          </paths>
+        </pipeline>
+      </DTS:ObjectData>
+    </DTS:Executable>
+  </DTS:Executables>
+  <DTS:DesignTimeProperties><![CDATA[<?xml version="1.0"?>
+<!--This CDATA section contains the layout information of the package. The section includes information such as (x,y) coordinates, width, and height.-->
+<!--If you manually edit this section and make a mistake, you can delete it. -->
+<!--The package will still be able to load normally but the previous layout information will be lost and the designer will automatically re-arrange the elements on the design surface.-->
+<Objects
+  Version="8">
+  <!--Each node below will contain properties that do not affect runtime behavior.-->
+  <Package
+    design-time-name="Package">
+    <LayoutInfo>
+      <GraphLayout
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph">
+        <NodeLayout
+          Size="177.6,41.6"
+          Id="Package\Populate Face Edges"
+          TopLeft="193.333325650957,82.3333339876599" />
+      </GraphLayout>
+    </LayoutInfo>
+  </Package>
+  <TaskHost
+    design-time-name="Package\Populate Face Edges">
+    <LayoutInfo>
+      <GraphLayout
+        Capacity="8" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        <NodeLayout
+          Size="164.8,41.6"
+          Id="Package\Populate Face Edges\Source Data Table"
+          TopLeft="217.499991357327,26.8666668801838" />
+        <NodeLayout
+          Size="152,41.6"
+          Id="Package\Populate Face Edges\Fact_Edges_V1"
+          TopLeft="212.499991556009,160.333334607548" />
+        <EdgeLayout
+          Id="Package\Populate Face Edges.Paths[OLE DB Source Output]"
+          TopLeft="299.899991357327,68.4666668801838">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="-11.3999998013178,91.8666677273644"
+              Start="0,0"
+              End="-11.3999998013178,84.3666677273644">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,41.9333338636822" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,41.9333338636822"
+                    Point2="0,45.9333338636822"
+                    Point3="-4,45.9333338636822" />
+                  <mssgle:LineSegment
+                    End="-7.39999980131779,45.9333338636822" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-7.39999980131779,45.9333338636822"
+                    Point2="-11.3999998013178,45.9333338636822"
+                    Point3="-11.3999998013178,49.9333338636822" />
+                  <mssgle:LineSegment
+                    End="-11.3999998013178,84.3666677273644" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <NodeLayout
+          Size="243.2,41.6"
+          Id="Package\Populate Face Edges\Source Data Table with clean Cities"
+          TopLeft="512.499979635081,31.2000002479553" />
+        <NodeLayout
+          Size="152,41.6"
+          Id="Package\Populate Face Edges\Fact_Edges_V2"
+          TopLeft="531.666645540132,149.066667851342" />
+        <EdgeLayout
+          Id="Package\Populate Face Edges.Paths[OLE DB Source Output1]"
+          TopLeft="634.099979635081,72.8000002479553">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="-26.4333340949482,76.2666676033868"
+              Start="0,0"
+              End="-26.4333340949482,68.7666676033868">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,34.1333338016934" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,34.1333338016934"
+                    Point2="0,38.1333338016934"
+                    Point3="-4,38.1333338016934" />
+                  <mssgle:LineSegment
+                    End="-22.4333340949482,38.1333338016934" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-22.4333340949482,38.1333338016934"
+                    Point2="-26.4333340949482,38.1333338016934"
+                    Point3="-26.4333340949482,42.1333338016934" />
+                  <mssgle:LineSegment
+                    End="-26.4333340949482,68.7666676033868" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+      </GraphLayout>
+    </LayoutInfo>
+  </TaskHost>
+  <PipelineComponentMetadata
+    design-time-name="Package\Populate Face Edges\Source Data Table">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\Populate Face Edges\Fact_Edges_V1">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q2:string">Table</Value>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\Populate Face Edges\Source Data Table with clean Cities">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\Populate Face Edges\Fact_Edges_V2">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q2:string">Table</Value>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+</Objects>]]></DTS:DesignTimeProperties>
+</DTS:Executable>

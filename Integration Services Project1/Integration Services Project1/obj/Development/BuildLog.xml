@@ -2,7 +2,7 @@
 <BuildLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <ProjectInfo>
     <Name>Integration Services Project1</Name>
-    <LastWriteTime>2022-01-05T15:41:08.2102735Z</LastWriteTime>
+    <LastWriteTime>2022-01-06T01:40:54.8944869Z</LastWriteTime>
     <LastKnownProtectionLevel>EncryptSensitiveWithUserKey</LastKnownProtectionLevel>
   </ProjectInfo>
   <LastBuildInfos>
@@ -13,12 +13,22 @@
     </ProjectBuildItemInfo>
     <ProjectBuildItemInfo>
       <Name>Step1_TruncateAndRecreate.dtsx</Name>
-      <LastWriteTime>2022-01-05T15:43:06.3712809Z</LastWriteTime>
+      <LastWriteTime>2022-01-06T01:40:54.8655637Z</LastWriteTime>
       <LastKnownProtectionLevel>EncryptSensitiveWithUserKey</LastKnownProtectionLevel>
     </ProjectBuildItemInfo>
     <ProjectBuildItemInfo>
-      <Name>Step3_DimCity_V1.dtsx</Name>
-      <LastWriteTime>2022-01-05T15:43:44.1823665Z</LastWriteTime>
+      <Name>Step3_DimCity_Nodes_V1.dtsx</Name>
+      <LastWriteTime>2022-01-06T01:32:29.8623593Z</LastWriteTime>
+      <LastKnownProtectionLevel>EncryptSensitiveWithUserKey</LastKnownProtectionLevel>
+    </ProjectBuildItemInfo>
+    <ProjectBuildItemInfo>
+      <Name>ParentPackage.dtsx</Name>
+      <LastWriteTime>2022-01-06T01:42:56.2621546Z</LastWriteTime>
+      <LastKnownProtectionLevel>EncryptSensitiveWithUserKey</LastKnownProtectionLevel>
+    </ProjectBuildItemInfo>
+    <ProjectBuildItemInfo>
+      <Name>Step4_Fact_Edges_V1.dtsx</Name>
+      <LastWriteTime>2022-01-06T01:42:56.3679318Z</LastWriteTime>
       <LastKnownProtectionLevel>EncryptSensitiveWithUserKey</LastKnownProtectionLevel>
     </ProjectBuildItemInfo>
   </LastBuildInfos>

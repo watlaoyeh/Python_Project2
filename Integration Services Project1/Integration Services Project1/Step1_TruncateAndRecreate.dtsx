@@ -11,8 +11,8 @@
   DTS:LocaleID="1033"
   DTS:ObjectName="Step1_TruncateAndRecreate"
   DTS:PackageType="5"
-  DTS:VersionBuild="9"
-  DTS:VersionGUID="{5567E88D-3BA0-4067-B873-5828A0DD08D7}">
+  DTS:VersionBuild="12"
+  DTS:VersionGUID="{E411CAF2-3232-439C-BA0C-8691DE8952E3}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -45,7 +45,24 @@
       <DTS:ObjectData>
         <SQLTask:SqlTaskData
           SQLTask:Connection="{CC476008-9EC8-4AA1-A903-0318D9BB9EDA}"
-          SQLTask:SqlStatementSource="IF OBJECT_ID(N'dbo.Nodes', N'U') IS NOT NULL  &#xA;   DROP TABLE [dbo].[Nodes];  &#xA;GO&#xA;&#xA; CREATE TABLE dbo.Nodes&#xA;  (&#xA;      Id int  IDENTITY(1,1),&#xA;&#x9;  Name nvarchar(255) null&#xA; )&#xA;&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+          SQLTask:SqlStatementSource="IF OBJECT_ID(N'dbo.Nodes', N'U') IS NOT NULL  &#xA;   DROP TABLE [dbo].[Nodes];  &#xA;GO&#xA;&#xA; CREATE TABLE dbo.Nodes&#xA;  (&#xA;      Id int  IDENTITY(1,1),&#xA;&#x9;  Name nvarchar(255) null&#xA; )&#xA;&#xA;IF OBJECT_ID(N'dbo.Nodes2', N'U') IS NOT NULL  &#xA;   DROP TABLE [dbo].[Nodes2];  &#xA;GO&#xA;&#xA; CREATE TABLE dbo.Nodes2&#xA;  (&#xA;      Id int  IDENTITY(1,1),&#xA;&#x9;  Name nvarchar(255) null&#xA; )&#xA;&#xA;&#xA;&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\Truncate Fact Edges V1"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:Description="Execute SQL Task"
+      DTS:DTSID="{9BAFB2E7-E900-4043-9A0B-A95F84D2DAB8}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Truncate Fact Edges V1"
+      DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2019; © 2019 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{CC476008-9EC8-4AA1-A903-0318D9BB9EDA}"
+          SQLTask:SqlStatementSource="IF OBJECT_ID(N'dbo.Fact_Edges_City_V1', N'U') IS NOT NULL  &#xA;   DROP TABLE [dbo].[Fact_Edges_City_V1];  &#xA;GO&#xA;&#xA;&#xA;&#xA;  Create Table Fact_Edges_City_V1&#xA;  (&#xA;&#x9;&#x9;[Source_Parent_City] nvarchar(255)&#xA;      ,[Target_Child_City] nvarchar(255)&#xA;      ,[Type] nvarchar(255)&#xA;      ,[Weight] int&#xA;&#xA;&#xA;&#xA;  )&#xA;&#xA;&#xA;&#xA;IF OBJECT_ID(N'dbo.Fact_Edges_City_V2', N'U') IS NOT NULL  &#xA;   DROP TABLE [dbo].[Fact_Edges_City_V2];  &#xA;GO&#xA;&#xA;&#xA;&#xA;  Create Table Fact_Edges_City_V2&#xA;  (&#xA;&#x9;&#x9;[Source_Parent_City] nvarchar(255)&#xA;      ,[Target_Child_City] nvarchar(255)&#xA;      ,[Type] nvarchar(255)&#xA;      ,[Weight] int&#xA;&#xA;&#xA;&#xA;  )" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
       </DTS:ObjectData>
     </DTS:Executable>
     <DTS:Executable
@@ -75,6 +92,14 @@
       DTS:LogicalAnd="True"
       DTS:ObjectName="Constraint"
       DTS:To="Package\Truncate Citi Node Table" />
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Constraint 1]"
+      DTS:CreationName=""
+      DTS:DTSID="{F5A87F81-3C64-49EF-A7AE-4832B1FF2F85}"
+      DTS:From="Package\Truncate Citi Node Table"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Constraint 1"
+      DTS:To="Package\Truncate Fact Edges V1" />
   </DTS:PrecedenceConstraints>
   <DTS:DesignTimeProperties><![CDATA[<?xml version="1.0"?>
 <!--This CDATA section contains the layout information of the package. The section includes information such as (x,y) coordinates, width, and height.-->
@@ -87,7 +112,7 @@
     design-time-name="Package">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        Capacity="8" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
         <NodeLayout
           Size="208.8,41.6"
           Id="Package\Truncate Source Data Table"
@@ -110,6 +135,44 @@
                   Capacity="5">
                   <mssgle:LineSegment
                     End="0,22.596970266766" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <NodeLayout
+          Size="190.4,41.6"
+          Id="Package\Truncate Fact Edges V1"
+          TopLeft="220.454536694469,226.909092712402" />
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Constraint 1]"
+          TopLeft="299.072719235132,186.569698121813">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="16.5818174593378,40.3393945905898"
+              Start="0,0"
+              End="16.5818174593378,32.8393945905898">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,16.1696972952949" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,16.1696972952949"
+                    Point2="0,20.1696972952949"
+                    Point3="4,20.1696972952949" />
+                  <mssgle:LineSegment
+                    End="12.5818174593378,20.1696972952949" />
+                  <mssgle:CubicBezierSegment
+                    Point1="12.5818174593378,20.1696972952949"
+                    Point2="16.5818174593378,20.1696972952949"
+                    Point3="16.5818174593378,24.1696972952949" />
+                  <mssgle:LineSegment
+                    End="16.5818174593378,32.8393945905898" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
